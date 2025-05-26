@@ -1,0 +1,9 @@
+.tick {
+  font-size: 12px;
+  margin-left: 10px;
+  color: gray;
+}
+
+.tick.seen {
+  color: blue;
+}

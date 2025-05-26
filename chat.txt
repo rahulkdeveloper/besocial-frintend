@@ -1,0 +1,143 @@
+import React from 'react';
+import ChatSidebar from './components/ChatSidebar';
+import ChatWindow from './components/ChatWindow';
+import './App.css';
+
+const App = () => {
+  return (
+    <div className="d-flex vh-100">
+      <ChatSidebar />
+      <ChatWindow />
+    </div>
+  );
+};
+
+export default App;
+
+
+// sidebar.js
+
+import React from 'react';
+import './ChatSidebar.css';
+
+const users = [
+  { id: 1, name: 'Brijesh', message: 'Image', time: '15:55' },
+  { id: 2, name: 'Wifyyyy', message: 'Golu Bhaiya', time: '13:26' },
+  { id: 3, name: 'Rahul 2', message: 'Ok', time: 'Yesterday' },
+  // Add more users here
+];
+
+const ChatSidebar = () => {
+  return (
+    <div className="chat-sidebar bg-light border-end p-2">
+      <h5 className="ps-2">Chats</h5>
+      <input className="form-control my-2" placeholder="Search or start new chat" />
+      <div className="chat-list">
+        {users.map((user) => (
+          <div key={user.id} className="chat-user d-flex justify-content-between align-items-center p-2 border-bottom">
+            <div>
+              <strong>{user.name}</strong>
+              <div className="text-muted small">{user.message}</div>
+            </div>
+            <div className="text-muted small">{user.time}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ChatSidebar;
+
+
+//ChatWindow.js
+
+import React from 'react';
+import ChatHeader from './ChatHeader';
+import ChatMessages from './ChatMessages';
+import ChatInput from './ChatInput';
+
+const ChatWindow = () => {
+  return (
+    <div className="flex-grow-1 d-flex flex-column">
+      <ChatHeader />
+      <ChatMessages />
+      <ChatInput />
+    </div>
+  );
+};
+
+export default ChatWindow;
+
+
+//chatheader.js
+
+import React from 'react';
+
+const ChatHeader = () => (
+  <div className="d-flex justify-content-between align-items-center p-2 border-bottom bg-white">
+    <div className="d-flex align-items-center">
+      <img src="https://via.placeholder.com/40" className="rounded-circle me-2" alt="User" />
+      <strong>Brijesh</strong>
+    </div>
+    <div>
+      <i className="bi bi-telephone me-3"></i>
+      <i className="bi bi-camera-video"></i>
+    </div>
+  </div>
+);
+
+export default ChatHeader;
+
+
+
+//chat message.js
+
+import React from 'react';
+
+const messages = [
+  { from: 'them', text: 'Sari bheji', time: '21:40' },
+  { from: 'them', text: 'Rahul pass hogi or vedio bhai', time: '21:41' },
+  { from: 'me', text: 'Okay bhai', time: '21:41' },
+];
+
+const ChatMessages = () => (
+  <div className="flex-grow-1 p-3 overflow-auto bg-light">
+    {messages.map((msg, index) => (
+      <div key={index} className={`mb-2 text-${msg.from === 'me' ? 'end' : 'start'}`}>
+        <div className={`d-inline-block p-2 rounded ${msg.from === 'me' ? 'bg-success text-white' : 'bg-white'}`}>
+          <div>{msg.text}</div>
+          <small className="d-block text-muted text-end">{msg.time}</small>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+export default ChatMessages;
+
+
+//chat input.js
+import React from 'react';
+
+const ChatInput = () => (
+  <div className="p-2 border-top bg-white d-flex">
+    <input type="text" className="form-control me-2" placeholder="Type a message" />
+    <button className="btn btn-primary">
+      <i className="bi bi-send"></i>
+    </button>
+  </div>
+);
+
+export default ChatInput;
+
+
+//app.css.chat-sidebar {
+  width: 300px;
+  overflow-y: auto;
+}
+
+.chat-list {
+  overflow-y: auto;
+  height: calc(100vh - 100px);
+}
