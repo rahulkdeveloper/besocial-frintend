@@ -41,6 +41,8 @@ const ChatWindow = ({ roomId = 1, chatType }) => {
         image={chatType === 'single' ? singleChatroomDetail.friend?.profileImage : singleChatroomDetail.groupImage
         }
         status={chatType === 'single' ? singleChatroomDetail.friend?.status : ''}
+        // lastLogin = {chatType==='single'}
+        chatroomId={singleChatroomDetail._id}
       />
       <ChatMessages
         singleChatroomDetail={singleChatroomDetail}

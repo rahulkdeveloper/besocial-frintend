@@ -4,6 +4,7 @@ import axiosInstance from '../../api/axiosInstance';
 const initialState = {
     fetchChatroomStatus: 'idle',
     fetchSingleChatroomStatus: 'idle',
+    fetchOldMessageStatus:'idle',
     isChatStart: false,
     chatroomId: null,
     chatType: 'single',
@@ -55,6 +56,31 @@ export const fetchSingleChatroom = createAsyncThunk('chatroom/single', async (pa
     } catch (error) {
         console.log("error in fetchSingleChatroom function", error);
         throw new Error(error.response.data.message || error.response.data.errors || "fetchSingleChatroom failed")
+
+    }
+})
+
+export const fetchOlderMessages = createAsyncThunk('chatroom/fetchOlderMessages', async (payload, thunkAPI) => {
+    console.log("insdie the fetchOlderMessages function", payload);
+
+    let { chatType = 'single',limit=10,page=2 } = payload;
+
+    try {
+        let res;
+
+        if (chatType === 'single') {
+            res = await axiosInstance.get(`/chatroom/${payload.id}?limit=${limit}&page=${page}`);
+        }
+
+        else {
+            res = await axiosInstance.get(`/group/${payload.id}`);
+        }
+
+        return res.data
+
+    } catch (error) {
+        console.log("error in fetchOlderMessages function", error);
+        throw new Error(error.response.data.message || error.response.data.errors || "fetchOlderMessages failed")
 
     }
 })
@@ -205,6 +231,25 @@ const chatroomSlice = createSlice({
                 state.sendMessageStatus = 'failed';
                 state.sendMessageError = action.error.message
 
+            })
+            .addCase(fetchOlderMessages.pending, (state) => {
+                state.fetchOldMessageStatus = 'loading'
+            })
+            .addCase(fetchOlderMessages.fulfilled, (state, action) => {
+                console.log("after fetchOlderMessages api call success::", action.payload)
+                state.fetchOldMessageStatus = 'success';
+
+                const { page, totalPages, total, limit,chatroom } = action.payload.data;
+
+                state.singleChatroomDetail.messages = [...state.singleChatroomDetail.messages,...chatroom.messages]
+
+                state.chatroomPagination = {
+                    ...state.chatroomPagination,
+                    currentPage: page,
+                    totalPages,
+                    totalItems: total,
+                    limit
+                }
             })
     }
 })

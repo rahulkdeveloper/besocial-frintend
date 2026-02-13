@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { sendFriendRequest,updateFriendRequest } from '../features/user/ContactSlice';
+import { sendFriendRequest, updateFriendRequest } from '../features/user/ContactSlice';
 import { setShowAlert } from "../features/alert/AlertSlice";
-import {apiUrl} from '../config/config'
+import { apiUrl } from '../config/config'
 
 const ProfileCard = (props) => {
 
-    const { _id:userId, profileImage, fullName, username, bio, contactStatus = 'unknown',userContacts } = props.user;
+    const { _id: userId, profileImage, fullName, username, bio, contactStatus = 'unknown', userContacts } = props.user;
 
     const dispatch = useDispatch();
-    const { friendRequestStatus, friendRequestError,updateFriendRequestStatus,updateUserContactError } = useSelector(state => state.contact)
+    const { friendRequestStatus, friendRequestError, updateFriendRequestStatus, updateUserContactError } = useSelector(state => state.contact)
 
     const handleFollowRequest = (status) => {
 
@@ -19,49 +19,49 @@ const ProfileCard = (props) => {
             dispatch(sendFriendRequest({ receiver: userId }))
         }
 
-        if(contactStatus === "Received" && ['accepted','rejected'].includes(status)){
+        if (contactStatus === "Received" && ['accepted', 'rejected'].includes(status)) {
             console.log("user want to accept or reject friend request::");
-            dispatch(updateFriendRequest({status,contactRequestId:userContacts._id,receiver: userId}))
+            dispatch(updateFriendRequest({ status, contactRequestId: userContacts._id, receiver: userId }))
         }
-        
+
 
     }
 
     useEffect(() => {
-    const alertsToShow = [
-        {
-            condition: friendRequestStatus === 'success',
-            message: "Friend Request sent!",
-            variant: 'success'
-        },
-        {
-            condition: updateFriendRequestStatus === 'success',
-            message: "Friend Request Accepted!",
-            variant: 'success'
-        },
-        {
-            condition: friendRequestStatus === 'failed' && friendRequestError,
-            message: friendRequestError,
-            variant: 'danger'
-        },
-        {
-            condition: updateFriendRequestStatus === 'failed' && updateUserContactError,
-            message: updateUserContactError,
-            variant: 'danger'
-        }
-    ];
+        const alertsToShow = [
+            {
+                condition: friendRequestStatus === 'success',
+                message: "Friend Request sent!",
+                variant: 'success'
+            },
+            {
+                condition: updateFriendRequestStatus === 'success',
+                message: "Friend Request Accepted!",
+                variant: 'success'
+            },
+            {
+                condition: friendRequestStatus === 'failed' && friendRequestError,
+                message: friendRequestError,
+                variant: 'danger'
+            },
+            {
+                condition: updateFriendRequestStatus === 'failed' && updateUserContactError,
+                message: updateUserContactError,
+                variant: 'danger'
+            }
+        ];
 
-    alertsToShow.forEach(alert => {
-        if (alert.condition) {
-            dispatch(setShowAlert({
-                alert: true,
-                message: alert.message,
-                variant: alert.variant,
-                duration: 1000
-            }));
-        }
-    });
-}, [dispatch, friendRequestStatus, friendRequestError, updateFriendRequestStatus, updateUserContactError]);
+        alertsToShow.forEach(alert => {
+            if (alert.condition) {
+                dispatch(setShowAlert({
+                    alert: true,
+                    message: alert.message,
+                    variant: alert.variant,
+                    duration: 1000
+                }));
+            }
+        });
+    }, [dispatch, friendRequestStatus, friendRequestError, updateFriendRequestStatus, updateUserContactError]);
 
 
     return (
@@ -86,19 +86,19 @@ const ProfileCard = (props) => {
                 </Link>}
                 {contactStatus === 'Received' && <>
                     <button class="btn btn-sm btn-success mx-3"
-                    onClick={()=> handleFollowRequest('accepted')}
+                        onClick={() => handleFollowRequest('accepted')}
                     >Accept
                     </button>
                     <button class="btn btn-sm btn-danger mx-3"
-                    onClick={()=> handleFollowRequest('rejected')}
+                        onClick={() => handleFollowRequest('rejected')}
                     >Reject
                     </button>
                 </>}
-               
-                {['pending','unknown'].includes(contactStatus) && <div class="d-grid gap-2">
-                    {contactStatus==='unknown'?<button class="btn btn-sm btn-primary" type="button"
+
+                {['pending', 'unknown'].includes(contactStatus) && <div class="d-grid gap-2">
+                    {contactStatus === 'unknown' ? <button class="btn btn-sm btn-primary" type="button"
                         onClick={handleFollowRequest}
-                    >{'Follow'}</button>:<button class="btn btn-sm btn-primary" type="button"
+                    >{'Follow'}</button> : <button class="btn btn-sm btn-primary" type="button"
                         disabled
                     >{'Request Sent'}</button>}
                 </div>}

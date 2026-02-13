@@ -25,3 +25,8 @@ export const getTime = (date)=>{
     let givenMoment = moment(date);
     return givenMoment.format("HH:mm")
 }
+
+export const getCompleteTime = (date) => {
+  let givenMoment = moment(date);
+  return givenMoment.format("HH:mm, D MMMM YYYY"); 
+};
