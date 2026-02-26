@@ -21,12 +21,13 @@ export const getDateAndTime = (date) => {
     return givenMoment.format("DD-MM-YYYY");
 };
 
-export const getTime = (date)=>{
+export const getTime = (date) => {
     let givenMoment = moment(date);
     return givenMoment.format("HH:mm")
 }
 
 export const getCompleteTime = (date) => {
-  let givenMoment = moment(date);
-  return givenMoment.format("HH:mm, D MMMM YYYY"); 
+    if (!date) return;
+    let givenMoment = moment(date);
+    return givenMoment.format("HH:mm, D MMMM YYYY");
 };

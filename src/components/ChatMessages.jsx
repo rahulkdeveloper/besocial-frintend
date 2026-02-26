@@ -39,7 +39,7 @@ const ChatMessages = ({ singleChatroomDetail }) => {
 
   // new message notification
   useEffect(() => {
-    if(!socket || !user?._id) return;
+    if (!socket || !user?._id) return;
     const handler = (data) => {
       if (data.room.toString() === singleChatroomDetail._id.toString() && data.receiverId.toString() === user._id.toString()) {
         dispatch(inCommingMessage({ message: data.data }));
@@ -55,7 +55,7 @@ const ChatMessages = ({ singleChatroomDetail }) => {
   }, [singleChatroomDetail?._id, user?._id, socket]);
 
   useEffect(() => {
-    if(!socket) return;
+    if (!socket) return;
     if (!singleChatroomDetail?._id) return;
 
     socket.emit("chatroom_join", {
@@ -67,9 +67,9 @@ const ChatMessages = ({ singleChatroomDetail }) => {
   // receive seen message notify
 
   useEffect(() => {
-    if(!socket || !user?._id) return;
+    if (!socket || !user?._id) return;
     const handler = ({ messageIds, roomId, seenBy }) => {
-      
+
       if (roomId.toString() === singleChatroomDetail?._id.toString() && seenBy.toString() !== user?._id.toString() && messageIds && messageIds.length > 0) {
         messageIds = messageIds.map(msgId => msgId.toString());
 
@@ -82,11 +82,11 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     return () => {
       socket.off('message_seen_notify', handler); // clean up listener
     };
-  }, [socket,singleChatroomDetail?._id,user?._id]);
+  }, [socket, singleChatroomDetail?._id, user?._id]);
 
 
   useEffect(() => {
-    if(!socket) return;
+    if (!socket) return;
 
     if (messages.length > 0) {
       const unseenMessages = messages.filter(msg => {
@@ -102,7 +102,7 @@ const ChatMessages = ({ singleChatroomDetail }) => {
 
         unreadMessageIds.forEach(id => alreadySeenMessages.current.add(id.toString()));
         console.log("email message_seen from frontend=====>");
-        
+
 
         socket.emit('message_seen', {
           roomId: unseenMessages[0].chatRoomId,
@@ -194,6 +194,11 @@ const ChatMessages = ({ singleChatroomDetail }) => {
   };
 
 
+  const handleHover = ()=>{
+    console.log("hover===========");
+    
+  }
+
   return (
     <div className="flex-grow-1 p-5 overflow-auto bg-secondary-subtle"
       ref={scrollContainerRef}
@@ -214,7 +219,9 @@ const ChatMessages = ({ singleChatroomDetail }) => {
 
             <div className={`mb-2 text-${msg.sender?._id?.toString() === user?._id?.toString() ? 'end' : 'start'}`}>
               <div className={`d-inline-block p-2 rounded ${msg.sender?._id?.toString() === user?._id?.toString() ? 'bg-success text-white' : 'bg-white'}`}>
+
                 <div>{msg.content}</div>
+
                 {msg.type === 'image' && (
                   <img src={msg.file?.url} height={100} width={200} alt="chat-img" />
                 )}
@@ -225,6 +232,16 @@ const ChatMessages = ({ singleChatroomDetail }) => {
                       &#10003;&#10003;
                     </span>
                   )}
+                  <div class="dropdown" style={{display:"none"}} onMouseEnter={handleHover}>
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      {/* Dropdown button */}
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="#">Action</a></li>
+                      <li><a class="dropdown-item" href="#">Another action</a></li>
+                      <li><a class="dropdown-item" href="#">Something else here</a></li>
+                    </ul>
+                  </div>
                 </small>
               </div>
             </div>
