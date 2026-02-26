@@ -16,7 +16,6 @@ const initialState = {
 }
 
 export const updateProfile = createAsyncThunk('user/update', async (payload, thunkAPI) => {
-    console.log("insdie the updateProfile function", payload);
 
     try {
         const res = await axiosInstance.put(`/user/profile/update`, payload);
@@ -30,7 +29,6 @@ export const updateProfile = createAsyncThunk('user/update', async (payload, thu
 })
 
 export const userList = createAsyncThunk('user/list', async (payload, thunkAPI) => {
-    console.log("insdie the userList function", payload);
     const { limit = 10, page = 1, search = '' } = payload;
 
     try {
@@ -69,12 +67,10 @@ const userSlice = createSlice({
                 state.updateProfileStatus = 'loading'
             })
             .addCase(updateProfile.fulfilled, (state, action) => {
-                console.log("after updateProfile api call success::", action.payload)
                 state.updateProfileStatus = 'success';
 
             })
             .addCase(updateProfile.rejected, (state, action) => {
-                console.log("updateProfile failed error::", action.error)
                 state.updateProfileStatus = 'failed';
                 state.updateProfileError = action.error.message
 
@@ -83,7 +79,6 @@ const userSlice = createSlice({
                 state.userListStatus = 'loading'
             })
             .addCase(userList.fulfilled, (state, action) => {
-                console.log("after userList api call success::", action.payload)
                 state.userListStatus = 'success';
                 const {users, page, totalPages, total,limit } = action.payload.data;
                 
@@ -104,7 +99,6 @@ const userSlice = createSlice({
 
             })
             .addCase(userList.rejected, (state, action) => {
-                console.log("userList failed error::", action.error)
                 state.userListStatus = 'failed';
                 state.userListError = action.error.message
 

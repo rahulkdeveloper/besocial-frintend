@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import UserProfiles from './components/UserProfiles'
 import Signup from './pages/Signup';
@@ -14,10 +14,14 @@ import FriendRequest from './pages/FriendRequest';
 import Friends from './pages/Friends';
 import UserProfile from './pages/UserProfile';
 import Chats from './pages/Chats';
+import {initSocket} from './socket'
 
 function AppContent() {
 
   const location = useLocation();
+  useEffect(()=>{
+    initSocket();
+  },[]);
 
   return (
     <>

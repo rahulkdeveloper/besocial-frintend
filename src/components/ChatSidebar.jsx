@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Badge } from 'react-bootstrap';
 import { getDateAndTime } from "../helper/utils";
 import { constant } from '../config/config';
@@ -6,38 +6,40 @@ import { FaImage } from 'react-icons/fa';
 import { startChat } from '../features/chat/ChatSlice'
 import { useDispatch, useSelector } from 'react-redux';
 import { unReadIncomingMessage } from '../features/chat/ChatSlice';
-import socket from '../socket';
+import { getSocket } from '../socket';
 
 const ChatSidebar = ({ allChatrooms }) => {
+    const socket = getSocket()
 
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
+
+    const [user, setUser] = useState({});
+    useEffect(() => {
+        const userData = localStorage.getItem('user');
+        setUser(JSON.parse(userData));
+    }, []);
 
     const chatStart = (roomId, type) => {
         dispatch(startChat({ id: roomId, type }))
     }
 
-    const { singleChatroomDetail } = useSelector(state => state.chatroom);
+    const { singleChatroomDetail,chatroomId } = useSelector(state => state.chatroom);
 
     useEffect(() => {
+        if(!socket || !user?._id) return;
         const handler = (data) => {
-            console.log("unread message received for sidebar::", data);
-            console.log("singleChatroomDetail detail", singleChatroomDetail);
-
-            if(singleChatroomDetail && data.room.toString() === singleChatroomDetail._id.toString()){
-                dispatch(unReadIncomingMessage({ message: data.data,type:"read" }))
-            }
-            
-            else {
-                dispatch(unReadIncomingMessage({ message: data.data,type:"unread" }))
+            if (data.receiverId.toString() === user?._id.toString() &&
+                data.room.toString() !== singleChatroomDetail?._id.toString()) {
+                dispatch(unReadIncomingMessage({ message: data.data, type: "unread" }))
             }
         };
 
-        socket.on('message_received', handler);
+        socket.on('unread_messages', handler);
 
         return () => {
-            socket.off('message_received', handler); // clean up listener
+            socket.off('unread_messages', handler); // clean up listener
         };
-    }, [singleChatroomDetail]);
+    }, [socket, user?._id,singleChatroomDetail?._id]);
 
     return (
         <div className="chat-sidebar bg-light border-end p-2">

@@ -21,8 +21,6 @@ const initialState = {
 }
 
 export const fetchChatrooms = createAsyncThunk('chatroom/list', async (payload, thunkAPI) => {
-    console.log("insdie the fetchChatrooms function", payload);
-
     try {
         const res = await axiosInstance.get(`/chatroom?search=${payload.search || ''}`);
 
@@ -36,7 +34,6 @@ export const fetchChatrooms = createAsyncThunk('chatroom/list', async (payload, 
 })
 
 export const fetchSingleChatroom = createAsyncThunk('chatroom/single', async (payload, thunkAPI) => {
-    console.log("insdie the fetchSingleChatroom function", payload);
 
     let { chatType = 'single' } = payload;
 
@@ -61,7 +58,6 @@ export const fetchSingleChatroom = createAsyncThunk('chatroom/single', async (pa
 })
 
 export const fetchOlderMessages = createAsyncThunk('chatroom/fetchOlderMessages', async (payload, thunkAPI) => {
-    console.log("insdie the fetchOlderMessages function", payload);
 
     let { chatType = 'single',limit=10,page=2 } = payload;
 
@@ -86,8 +82,6 @@ export const fetchOlderMessages = createAsyncThunk('chatroom/fetchOlderMessages'
 })
 
 export const sendMessageInRoom = createAsyncThunk('chatroom/sendMessage', async (payload, thunkAPI) => {
-    console.log("inside the sendMessageInRoom function", payload);
-
     let { chatType = 'single' } = payload;
 
     try {
@@ -123,12 +117,9 @@ const chatroomSlice = createSlice({
             state.chatroomId = null;
         },
         inCommingMessage: (state, action) => {
-            console.log("state.payload::", action.payload);
-            const message = action.payload.message;
             state.singleChatroomDetail.messages.push(action.payload.message);
         },
         markMessageSeen: (state, action) => {
-            console.log("state.payload markMessageSeen::", action.payload);
             const {messageIds} = action.payload;
             state.singleChatroomDetail.messages = state.singleChatroomDetail.messages.map(msg => messageIds.includes(msg._id.toString()) ? { ...msg, seen: true } : msg)
         },
@@ -138,15 +129,11 @@ const chatroomSlice = createSlice({
             const index = state.allChatrooms.findIndex(room => room._id.toString() === message.chatRoomId.toString());
 
             if (index !== -1) {
-                console.log("state.allChatrooms[index].unreadMessageCount", state.allChatrooms[index].unreadMessageCount)
-                state.allChatrooms[index].currentMessage = message;
 
                 if (type === 'unread') {
                     state.allChatrooms[index].unreadMessageCount = (state.allChatrooms[index].unreadMessageCount || 0) + 1;
+                    state.allChatrooms[index].currentMessage = message
                 }
-
-                console.log("state.allChatrooms[index].unreadMessageCount afterr:::", state.allChatrooms[index].unreadMessageCount);
-
                 state.allChatrooms.sort((a, b) => {
                     const unreadDiff = (b.unreadMessageCount || 0) - (a.unreadMessageCount || 0);
 
@@ -169,7 +156,6 @@ const chatroomSlice = createSlice({
                 state.fetchChatroomStatus = 'loading'
             })
             .addCase(fetchChatrooms.fulfilled, (state, action) => {
-                console.log("after friendRequestList api call success::", action.payload)
                 state.fetchChatroomStatus = 'success';
                 state.allChatrooms = action.payload.data.allChatrooms
             })
@@ -177,7 +163,6 @@ const chatroomSlice = createSlice({
                 state.fetchSingleChatroomStatus = 'loading'
             })
             .addCase(fetchSingleChatroom.fulfilled, (state, action) => {
-                console.log("after fetchSingleChatroom api call success::", action.payload)
                 state.fetchSingleChatroomStatus = 'success';
                 state.singleChatroomDetail = action.payload.data.chatroom;
 
@@ -194,11 +179,7 @@ const chatroomSlice = createSlice({
                 const index = state.allChatrooms.findIndex(room => room._id.toString() === state.singleChatroomDetail._id.toString());
 
                 if (index !== -1) {
-
-                    // state.allChatrooms[index].currentMessage = message;
                     state.allChatrooms[index].unreadMessageCount = 0
-                    //     console.log("state.allChatrooms[index].unreadMessageCount afterr:::", state.allChatrooms[index].unreadMessageCount);
-
                     // state.allChatrooms.sort((a,b)=> b.unreadMessageCount-a.unreadMessageCount)
                 }
 
@@ -208,7 +189,6 @@ const chatroomSlice = createSlice({
                 state.sendMessageStatus = 'loading'
             })
             .addCase(sendMessageInRoom.fulfilled, (state, action) => {
-                console.log("after sendMessage api call success::", action.payload)
                 state.sendMessageStatus = 'success';
                 state.singleChatroomDetail.messages.push(action.payload.data.message)
 
@@ -227,7 +207,6 @@ const chatroomSlice = createSlice({
 
             })
             .addCase(sendMessageInRoom.rejected, (state, action) => {
-                console.log("sendMessage failed error::", action.error)
                 state.sendMessageStatus = 'failed';
                 state.sendMessageError = action.error.message
 
@@ -236,7 +215,6 @@ const chatroomSlice = createSlice({
                 state.fetchOldMessageStatus = 'loading'
             })
             .addCase(fetchOlderMessages.fulfilled, (state, action) => {
-                console.log("after fetchOlderMessages api call success::", action.payload)
                 state.fetchOldMessageStatus = 'success';
 
                 const { page, totalPages, total, limit,chatroom } = action.payload.data;

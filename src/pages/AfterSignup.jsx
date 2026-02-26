@@ -45,7 +45,6 @@ const AfterSignup = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             })
 
-            console.log("res from banner uplaod::", res.data);
             setProfileImage(res.data.data._id)
 
         } catch (error) {
@@ -87,7 +86,6 @@ const AfterSignup = () => {
 
     useEffect(() => {
         if (updateProfileStatus === "failed" && updateProfileError) {
-            console.log("showing alert");
             dispatch(setShowAlert({ alert: true, message: updateProfileError || 'Some error occured. Try again', variant: 'danger' }));
         }
     }, [dispatch, updateProfileStatus, updateProfileError])

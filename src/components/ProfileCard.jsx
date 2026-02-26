@@ -15,12 +15,10 @@ const ProfileCard = (props) => {
     const handleFollowRequest = (status) => {
 
         if (contactStatus === "unknown") {
-            console.log("start following...");
             dispatch(sendFriendRequest({ receiver: userId }))
         }
 
         if (contactStatus === "Received" && ['accepted', 'rejected'].includes(status)) {
-            console.log("user want to accept or reject friend request::");
             dispatch(updateFriendRequest({ status, contactRequestId: userContacts._id, receiver: userId }))
         }
 

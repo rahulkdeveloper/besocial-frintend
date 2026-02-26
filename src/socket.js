@@ -1,21 +1,18 @@
 import { io } from "socket.io-client";
 
-const token = localStorage.getItem('token');
+let socket = null;
 
-console.log("token::", token);
+export const initSocket = () => {
+  if (!socket) {
+    const token = localStorage.getItem("token");
 
+    socket = io("http://localhost:8001", {
+      auth: { token },
+      transports: ["websocket"],
+      autoConnect: true
+    });
+  }
+  return socket;
+};
 
-let socket;
-
-if (token) {
-  socket = io("http://localhost:8001", {
-    auth: {
-      token: token
-    },
-    transports: ["websocket"]
-  });
-}
-
-
-
-export default socket;
+export const getSocket = () => socket;

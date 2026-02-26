@@ -7,7 +7,6 @@ import { FaFile } from 'react-icons/fa'
 import axiosInstance from '../api/axiosInstance';
 
 const ChatInput = ({ roomId, sender }) => {
-  console.log("roomdId in send message input box::", roomId)
   const [messageText, setMessageText] = useState("");
 
   const { sendMessageError, sendMessageStatus } = useSelector(state => state.chatroom);
@@ -30,7 +29,6 @@ const ChatInput = ({ roomId, sender }) => {
   useEffect(() => {
 
     if (sendMessageStatus === 'success') {
-      console.log("showing alert now::")
       setMessageText("")
       dispatch(setShowAlert({ alert: true, message: "Message sent!", variant: 'success', duration: 1000 }));
     }
@@ -53,8 +51,6 @@ const ChatInput = ({ roomId, sender }) => {
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
 
-    console.log("file selected::", file)
-
     if (!file) return;
     const formData = new FormData();
     const fileType = file.type.split('/')[0]
@@ -63,8 +59,6 @@ const ChatInput = ({ roomId, sender }) => {
       const res = await axiosInstance.post('/upload/single', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-
-      console.log("res from file upload::", res.data);
 
       if (res.data?.data && res.data.data._id) {
         sendMessage(fileType, res.data.data._id, '')

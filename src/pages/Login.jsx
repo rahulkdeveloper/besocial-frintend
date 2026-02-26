@@ -16,9 +16,6 @@ const Login = () => {
 
     const onSubmitHandler = (e) => {
         e.preventDefault();
-        console.log("login fn running::");
-        console.log("cred::", emailOrPhone, password);
-
         dispatch(login({ emailOrPhone, password }));
 
     }
@@ -27,7 +24,6 @@ const Login = () => {
     useEffect(() => {
 
         if (loginStatus === "success" && (token || localStorage.getItem("token"))) {
-            console.log("Login successful, redirecting to home...");
             dispatch(setShowAlert({ alert: true, message: "Login successfull", variant: 'success', duration: 1000 }));
             setTimeout(() => {
 
@@ -43,8 +39,6 @@ const Login = () => {
 
     useEffect(() => {
         if (loginStatus === "failed" && loginError) {
-            console.log("showing alert");
-
             dispatch(setShowAlert({ alert: true, message: loginError, variant: 'danger', duration: 1500 }));
         }
     }, [dispatch, loginStatus, loginError])

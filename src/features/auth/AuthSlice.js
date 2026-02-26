@@ -11,7 +11,6 @@ const initialState = {
 }
 
 export const signup = createAsyncThunk('auth/signup',async (data,thunkAPI)=>{
-    console.log("insdie the signup function",data);
     
     try {
 
@@ -26,7 +25,6 @@ export const signup = createAsyncThunk('auth/signup',async (data,thunkAPI)=>{
 })
 
 export const login = createAsyncThunk('auth/login',async (credentials,thunkAPI)=>{
-    console.log("insdie the login function",credentials);
     
     try {
 
@@ -64,7 +62,6 @@ const authSlice = createSlice({
             state.signupStatus = 'loading'
         })
         .addCase(signup.fulfilled,(state,action)=>{
-            console.log("after signup api call success::",action.payload)
             state.signupStatus = 'success',
             state.signupError = null
             localStorage.setItem('token',action.payload.data.token);
@@ -74,7 +71,6 @@ const authSlice = createSlice({
             
         })
         .addCase(signup.rejected,(state,action)=>{
-            console.log("signup failed error::",action.error)
             state.signupStatus = 'failed';
             state.signupError = action.error.message
             
@@ -83,7 +79,6 @@ const authSlice = createSlice({
             state.loginStatus = 'loading'
         })
         .addCase(login.fulfilled,(state,action)=>{
-            console.log("after login api call success::",action.payload)
             state.loginStatus = 'success',
             state.loginError = null
             localStorage.setItem('token',action.payload.data.token);
@@ -93,7 +88,6 @@ const authSlice = createSlice({
             
         })
         .addCase(login.rejected,(state,action)=>{
-            console.log("login failed error::",action.error)
             state.loginStatus = 'failed';
             state.loginError = action.error.message
             

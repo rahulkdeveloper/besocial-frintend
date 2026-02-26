@@ -11,10 +11,6 @@ const ChatWindow = ({ roomId = 1, chatType }) => {
 
   const { singleChatroomDetail, chatroomId, chatroomPagination, fetchSingleChatroomStatus } = useSelector(state => state.chatroom);
 
-  if (chatroomId) {
-    console.log(true)
-  }
-
   useEffect(() => {
     return () => {
       dispatch(resetChatroomDetail())
@@ -23,7 +19,6 @@ const ChatWindow = ({ roomId = 1, chatType }) => {
 
   useEffect(() => {
     if (roomId) {
-      console.log("Dispatching fetchSingleChatroom with roomId:", roomId);
       dispatch(fetchSingleChatroom({ id: roomId, chatType }));
     };
 

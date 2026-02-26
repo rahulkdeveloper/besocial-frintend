@@ -22,7 +22,6 @@ const Signup = () => {
 
     const onSubmitHandler = (e) => {
         e.preventDefault();
-        console.log("register fn running::");
         const signupData = {
             email,
             username,
@@ -32,8 +31,6 @@ const Signup = () => {
             gender,
         }
 
-        console.log("signupData::",signupData)
-
         dispatch(signup(signupData));
 
     }
@@ -41,7 +38,6 @@ const Signup = () => {
     useEffect(() => {
 
         if (signupStatus === 'success' && (token || localStorage.getItem("token"))) {
-            console.log("signup successful, redirecting to home...");
             dispatch(setShowAlert({ alert: true, message: "Signup successfully", variant: 'success', duration: 2000 }));
             setTimeout(() => {
 
@@ -57,7 +53,6 @@ const Signup = () => {
 
     useEffect(() => {
         if (signupStatus === "failed" && signupError) {
-            console.log("showing alert");
 
             dispatch(setShowAlert({ alert: true, message: signupError, variant: 'danger' }));
         }

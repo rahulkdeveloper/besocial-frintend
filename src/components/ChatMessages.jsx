@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getTime, getDateAndTime } from '../helper/utils';
-import socket from '../socket';
 import { inCommingMessage, markMessageSeen, fetchOlderMessages } from '../features/chat/ChatSlice'
 import { useDispatch, useSelector } from 'react-redux';
 import moment from "moment";
+import { getSocket } from '../socket';
 
 
 const ChatMessages = ({ singleChatroomDetail }) => {
   const alreadySeenMessages = useRef(new Set());
   const scrollContainerRef = useRef(null);
+  const socket = getSocket()
 
   const [user, setUser] = useState({});
   const [messages, setMessages] = useState([]);
@@ -26,24 +27,21 @@ const ChatMessages = ({ singleChatroomDetail }) => {
   }, []);
 
 
-  useEffect(()=>{
-
-    console.log("send user_active socket to backend::")
-
-    socket.emit('active_chat',{
-      targetUserId:singleChatroomDetail.friend?._id,
-      roomDetail:{
-        userId:singleChatroomDetail.sender?._id,
-        roomId:singleChatroomDetail._id
-      }
-    })
-  },[singleChatroomDetail])
+  // useEffect(() => {
+  //   socket.emit('active_chat', {
+  //     targetUserId: singleChatroomDetail.friend?._id,
+  //     roomDetail: {
+  //       userId: singleChatroomDetail.sender?._id,
+  //       roomId: singleChatroomDetail._id
+  //     }
+  //   })
+  // }, [singleChatroomDetail])
 
   // new message notification
   useEffect(() => {
+    if(!socket || !user?._id) return;
     const handler = (data) => {
-      // console.log("message received::", data);
-      if (data.room.toString() === singleChatroomDetail._id.toString()) {
+      if (data.room.toString() === singleChatroomDetail._id.toString() && data.receiverId.toString() === user._id.toString()) {
         dispatch(inCommingMessage({ message: data.data }));
       }
 
@@ -54,15 +52,27 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     return () => {
       socket.off('message_received', handler); // clean up listener
     };
-  }, [singleChatroomDetail._id]);
+  }, [singleChatroomDetail?._id, user?._id, socket]);
+
+  useEffect(() => {
+    if(!socket) return;
+    if (!singleChatroomDetail?._id) return;
+
+    socket.emit("chatroom_join", {
+      roomId: singleChatroomDetail._id
+    });
+
+  }, [singleChatroomDetail?._id]);
 
   // receive seen message notify
 
   useEffect(() => {
-    const handler = ({ messageIds }) => {
-      console.log("messageIds::", messageIds)
-      if (messageIds && messageIds.length > 0) {
-        messageIds = messageIds.map(msgId => msgId.toString())
+    if(!socket || !user?._id) return;
+    const handler = ({ messageIds, roomId, seenBy }) => {
+      
+      if (roomId.toString() === singleChatroomDetail?._id.toString() && seenBy.toString() !== user?._id.toString() && messageIds && messageIds.length > 0) {
+        messageIds = messageIds.map(msgId => msgId.toString());
+
         dispatch(markMessageSeen({ messageIds }))
       }
     };
@@ -72,33 +82,31 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     return () => {
       socket.off('message_seen_notify', handler); // clean up listener
     };
-  }, []);
+  }, [socket,singleChatroomDetail?._id,user?._id]);
 
 
   useEffect(() => {
+    if(!socket) return;
 
     if (messages.length > 0) {
       const unseenMessages = messages.filter(msg => {
         return (
-          !msg.seen && msg.sender?._id.toString() !== user.id.toString() &&
+          !msg.seen && msg.sender?._id.toString() !== user?._id.toString() &&
           !alreadySeenMessages.current.has(msg._id.toString())
         )
       })
 
-      // console.log("unseenMessages::", unseenMessages.length)
-
       if (unseenMessages.length > 0) {
-        // console.log("start sending message seen socket::", unseenMessages);
 
         const unreadMessageIds = unseenMessages.map(msg => msg._id);
 
         unreadMessageIds.forEach(id => alreadySeenMessages.current.add(id.toString()));
-
-        // console.log("unreadMessageIds::", unreadMessageIds)
+        console.log("email message_seen from frontend=====>");
+        
 
         socket.emit('message_seen', {
           roomId: unseenMessages[0].chatRoomId,
-          seenBy: user.id,
+          seenBy: user._id,
           unreadMessageIds: unreadMessageIds
 
         })
@@ -204,15 +212,15 @@ const ChatMessages = ({ singleChatroomDetail }) => {
           <React.Fragment key={msg._id || index}>
             {renderDateSeparator(prevMsg, msg)}
 
-            <div className={`mb-2 text-${msg.sender?._id.toString() === user.id.toString() ? 'end' : 'start'}`}>
-              <div className={`d-inline-block p-2 rounded ${msg.sender?._id.toString() === user.id.toString() ? 'bg-success text-white' : 'bg-white'}`}>
+            <div className={`mb-2 text-${msg.sender?._id?.toString() === user?._id?.toString() ? 'end' : 'start'}`}>
+              <div className={`d-inline-block p-2 rounded ${msg.sender?._id?.toString() === user?._id?.toString() ? 'bg-success text-white' : 'bg-white'}`}>
                 <div>{msg.content}</div>
                 {msg.type === 'image' && (
                   <img src={msg.file?.url} height={100} width={200} alt="chat-img" />
                 )}
                 <small className="d-block text-muted text-end">
                   {getTime(msg.createdAt)}
-                  {msg.sender?._id.toString() === user.id.toString() && (
+                  {msg.sender?._id?.toString() === user?._id?.toString() && (
                     <span className="tick" style={{ color: msg.seen ? 'blue' : 'black' }}>
                       &#10003;&#10003;
                     </span>

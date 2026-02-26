@@ -28,7 +28,6 @@ const initialState = {
 }
 
 export const friendRequestList = createAsyncThunk('contact/friendRequests', async (payload, thunkAPI) => {
-    console.log("insdie the friendRequestList function", payload);
 
     try {
         const res = await axiosInstance.get(`/contact/list?status=pending&limit=${payload.limit}&page=${payload.page}`);
@@ -43,7 +42,6 @@ export const friendRequestList = createAsyncThunk('contact/friendRequests', asyn
 })
 
 export const myFriends = createAsyncThunk('contact/friends', async (payload, thunkAPI) => {
-    console.log("insdie the myFriends function", payload);
 
     try {
         const res = await axiosInstance.get(`/contact/freinds?limit=${payload.limit}&page=${payload.page}&search=${payload.search || ''}`);
@@ -58,7 +56,6 @@ export const myFriends = createAsyncThunk('contact/friends', async (payload, thu
 })
 
 export const sendFriendRequest = createAsyncThunk('contact/follow', async (payload, thunkAPI) => {
-    console.log("insdie the sendFriendRequest function", payload);
 
     try {
         const res = await axiosInstance.post(`/contact/send-request`, payload);
@@ -80,7 +77,6 @@ export const sendFriendRequest = createAsyncThunk('contact/follow', async (paylo
 })
 
 export const updateFriendRequest = createAsyncThunk('contact/update', async (payload, thunkAPI) => {
-    console.log("insdie the updateFriendRequest function", payload);
 
     try {
         const res = await axiosInstance.put(`/contact/update/request`, payload);
@@ -121,13 +117,11 @@ const contactSlice = createSlice({
                 state.friendRequestStatus = 'loading'
             })
             .addCase(sendFriendRequest.fulfilled, (state, action) => {
-                console.log("after sendFriendRequest api call success::", action.payload)
                 state.friendRequestStatus = 'success';
 
 
             })
             .addCase(sendFriendRequest.rejected, (state, action) => {
-                console.log("sendFriendRequest failed error::", action.error)
                 state.friendRequestStatus = 'failed';
                 state.friendRequestError = action.error.message
 
@@ -136,14 +130,12 @@ const contactSlice = createSlice({
                 state.updateFriendRequestStatus = 'loading'
             })
             .addCase(updateFriendRequest.fulfilled, (state, action) => {
-                console.log("after updateFriendRequest api call success::", action.payload)
                 state.updateFriendRequestStatus = 'success';
                 state.contactList = state.contactList.filter(contact => action.payload?.data?.contactRequestExist?._id.toString() !== contact._id.toString())
 
 
             })
             .addCase(updateFriendRequest.rejected, (state, action) => {
-                console.log("updateFriendRequest failed error::", action.error)
                 state.updateFriendRequestStatus = 'failed';
                 state.updateUserContactError = action.error.message
 
@@ -152,7 +144,6 @@ const contactSlice = createSlice({
                 state.contactListStatus = 'loading'
             })
             .addCase(friendRequestList.fulfilled, (state, action) => {
-                console.log("after friendRequestList api call success::", action.payload)
                 state.contactListStatus = 'success';
                 state.contactList = action.payload.data.contactRequests;
                 const { page, totalPages, total } = action.payload.data;
@@ -166,7 +157,6 @@ const contactSlice = createSlice({
 
             })
             .addCase(friendRequestList.rejected, (state, action) => {
-                console.log("friendRequestList failed error::", action.error)
                 state.contactListStatus = 'failed';
                 state.contactListError = action.error.message
 
@@ -175,7 +165,6 @@ const contactSlice = createSlice({
                 state.myFriendFetchStatus = 'loading'
             })
             .addCase(myFriends.fulfilled, (state, action) => {
-                console.log("after myFriends api call success::", action.payload)
                 state.myFriendFetchStatus = 'success';
                 state.contactList = action.payload.data.contactRequests;
                 const {friends, page, totalPages, total,limit } = action.payload.data;
