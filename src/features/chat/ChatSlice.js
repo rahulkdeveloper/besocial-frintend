@@ -4,13 +4,15 @@ import axiosInstance from '../../api/axiosInstance';
 const initialState = {
     fetchChatroomStatus: 'idle',
     fetchSingleChatroomStatus: 'idle',
-    fetchOldMessageStatus:'idle',
+    fetchOldMessageStatus: 'idle',
     isChatStart: false,
     chatroomId: null,
     chatType: 'single',
     singleChatroomDetail: null,
     sendMessageError: null,
     sendMessageStatus: "idle",
+    deleteMessageStatus: "idle",
+    deleteMessageError: null,
     chatroomPagination: {
         currentPage: 1,
         totalPages: 1,
@@ -59,7 +61,7 @@ export const fetchSingleChatroom = createAsyncThunk('chatroom/single', async (pa
 
 export const fetchOlderMessages = createAsyncThunk('chatroom/fetchOlderMessages', async (payload, thunkAPI) => {
 
-    let { chatType = 'single',limit=10,page=2 } = payload;
+    let { chatType = 'single', limit = 10, page = 2 } = payload;
 
     try {
         let res;
@@ -96,6 +98,26 @@ export const sendMessageInRoom = createAsyncThunk('chatroom/sendMessage', async 
     }
 })
 
+export const deleteMessage = createAsyncThunk('chatroom/deleteMessage', async (payload, thunkAPI) => {
+    console.log("inside the deleteMessage thunk api===>", payload);
+
+    try {
+        let res = await axiosInstance.delete(
+            `/chatroom/${payload.roomId}/message/${payload.messageId}`,
+            {
+                data: { type: payload.type }
+            }
+        );
+
+        return res.data
+
+    } catch (error) {
+        console.log("error in deleteMessage function", error);
+        throw new Error(error.response.data.message || error.response.data.errors || "sendMessageInRoom failed")
+
+    }
+})
+
 const chatroomSlice = createSlice({
     name: 'contact',
     initialState,
@@ -103,8 +125,10 @@ const chatroomSlice = createSlice({
         resetStatusAndErrors: (state, action) => {
             state.fetchChatroomStatus = 'idle';
             state.fetchSingleChatroomStatus = 'idle';
-            state.sendMessageError = null,
-                state.sendMessageStatus = 'idle'
+            state.sendMessageError = null;
+            state.sendMessageStatus = 'idle';
+            state.deleteMessageError = null;
+            state.deleteMessageStatus = 'idle';
         },
         startChat: (state, action) => {
             state.isChatStart = true;
@@ -118,10 +142,44 @@ const chatroomSlice = createSlice({
         },
         inCommingMessage: (state, action) => {
             state.singleChatroomDetail.messages.push(action.payload.message);
+
+            // update current message received in chatlist of receiver...
+            const index = state.allChatrooms.findIndex(room => room._id.toString() === state.singleChatroomDetail?._id.toString());
+            if (index !== -1) {
+                state.allChatrooms[index].currentMessage = action.payload.message
+            }
         },
         markMessageSeen: (state, action) => {
-            const {messageIds} = action.payload;
+            const { messageIds } = action.payload;
             state.singleChatroomDetail.messages = state.singleChatroomDetail.messages.map(msg => messageIds.includes(msg._id.toString()) ? { ...msg, seen: true } : msg)
+        },
+        deleteMessageSingleRoom: (state, action) => {
+            const { messageId, roomId } = action.payload;
+            if (state.singleChatroomDetail && state.singleChatroomDetail?._id.toString() === roomId.toString()) {
+                const findIndex = state.singleChatroomDetail.messages.findIndex(msg => msg?._id.toString() === messageId?.toString());
+
+                if (findIndex !== -1) {
+                    let currentMessage = state.singleChatroomDetail.messages[findIndex]
+
+                    state.singleChatroomDetail.messages[findIndex] = { ...currentMessage, isDeleted: true }
+                }
+
+                // update in allchatrooms list current message...
+                const chatroomIndex = state.allChatrooms.findIndex(room => room._id.toString() === roomId.toString());
+
+                console.log("chatroomIndex====", chatroomIndex);
+
+
+                if (chatroomIndex !== -1 && state.allChatrooms[chatroomIndex]) {
+                    let chatroom = state.allChatrooms[chatroomIndex];
+                    console.log("chatroom====", chatroom);
+
+                    if (chatroom && chatroom.currentMessage?._id.toString() === messageId.toString()) {
+                        state.allChatrooms[chatroomIndex].currentMessage = {...state.allChatrooms[chatroomIndex].currentMessage,isDeleted:true}
+                    }
+                }
+
+            }
         },
         unReadIncomingMessage: (state, action) => {
             const message = action.payload.message;
@@ -217,9 +275,9 @@ const chatroomSlice = createSlice({
             .addCase(fetchOlderMessages.fulfilled, (state, action) => {
                 state.fetchOldMessageStatus = 'success';
 
-                const { page, totalPages, total, limit,chatroom } = action.payload.data;
+                const { page, totalPages, total, limit, chatroom } = action.payload.data;
 
-                state.singleChatroomDetail.messages = [...state.singleChatroomDetail.messages,...chatroom.messages]
+                state.singleChatroomDetail.messages = [...state.singleChatroomDetail.messages, ...chatroom.messages]
 
                 state.chatroomPagination = {
                     ...state.chatroomPagination,
@@ -229,10 +287,44 @@ const chatroomSlice = createSlice({
                     limit
                 }
             })
+            .addCase(deleteMessage.pending, (state) => {
+                state.deleteMessageStatus = 'loading'
+            })
+            .addCase(deleteMessage.fulfilled, (state, action) => {
+                state.deleteMessageStatus = 'success';
+
+                const { _id: messageId, roomId } = action.payload.data;
+
+                if (state.singleChatroomDetail && state.singleChatroomDetail?._id.toString() === roomId.toString()) {
+
+                    const findIndex = state.singleChatroomDetail.messages.findIndex(msg => msg?._id.toString() === messageId?.toString());
+                    if (findIndex !== -1) {
+
+                        state.singleChatroomDetail.messages[findIndex] = action.payload.data
+                    }
+                }
+
+                // update in allchatrooms list current message...
+                const chatroomIndex = state.allChatrooms.findIndex(room => room._id.toString() === state.singleChatroomDetail._id.toString());
+
+                if (chatroomIndex !== -1 && state.allChatrooms[chatroomIndex]) {
+                    let chatroom = state.allChatrooms[chatroomIndex];
+
+                    if (chatroom && chatroom.currentMessage?._id.toString() === messageId.toString()) {
+                        state.allChatrooms[chatroomIndex].currentMessage = action.payload.data;
+                    }
+                }
+
+
+            })
+            .addCase(deleteMessage.rejected, (state, action) => {
+                state.deleteMessageStatus = 'failed';
+                state.deleteMessageError = action.error.message
+            })
     }
 })
 
-export const { resetStatusAndErrors, startChat, resetChatroomDetail, inCommingMessage, unReadIncomingMessage,markMessageSeen } = chatroomSlice.actions
+export const { resetStatusAndErrors, startChat, resetChatroomDetail, inCommingMessage, unReadIncomingMessage, markMessageSeen, deleteMessageSingleRoom } = chatroomSlice.actions
 
 
 export default chatroomSlice.reducer

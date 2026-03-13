@@ -9,8 +9,6 @@ const ChatHeader = ({ name, status, image, chatroomId }) => {
 
   const [userActiveDetail, setUserActiveDetail] = useState({ status: status });
   const {singleChatroomDetail} = useSelector(state=>state.chatroom);
-  console.log("singleChatroomDetail",singleChatroomDetail);
-  
 
   useEffect(() => {
 

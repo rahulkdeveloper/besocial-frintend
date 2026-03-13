@@ -3,7 +3,8 @@ import AlertReducer from '../features/alert/AlertSlice';
 import AuthReducer from '../features/auth/AuthSlice';
 import UserReducer from '../features/user/UserSlice';
 import ContactReducer from '../features/user/ContactSlice';
-import ChatRoomReducer from '../features/chat/ChatSlice'
+import ChatRoomReducer from '../features/chat/ChatSlice';
+import ModalReducer from '../features/modal/modalSlice';
 
 export const store = configureStore({
     reducer:{
@@ -11,6 +12,7 @@ export const store = configureStore({
         auth:AuthReducer,
         user:UserReducer,
         contact:ContactReducer,
-        chatroom:ChatRoomReducer
+        chatroom:ChatRoomReducer,
+        modal:ModalReducer
     }
 })

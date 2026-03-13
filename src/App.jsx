@@ -15,6 +15,7 @@ import Friends from './pages/Friends';
 import UserProfile from './pages/UserProfile';
 import Chats from './pages/Chats';
 import {initSocket} from './socket'
+import ExampleModal from './components/ExampleModal';
 
 function AppContent() {
 
@@ -26,6 +27,7 @@ function AppContent() {
   return (
     <>
       <AnimationAlert />
+      <ExampleModal/>
       {!['/login', '/signup'].includes(location.pathname) ? (
         <div>
           <MyNavbar />

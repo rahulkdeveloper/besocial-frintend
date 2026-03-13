@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { resetStatusAndErrors, login } from "../features/auth/AuthSlice"
 import { setShowAlert } from "../features/alert/AlertSlice"
+import ExampleModal from '../components/ExampleModal';
 
 const Login = () => {
 
@@ -48,6 +49,7 @@ const Login = () => {
     return (
         <div className='container' style={{ "maxWidth": "500px" }}>
 
+            <ExampleModal/>
 
             <div className='logo text-center'>
                 <img

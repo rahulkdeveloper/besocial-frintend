@@ -1,31 +1,40 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { getTime, getDateAndTime } from '../helper/utils';
-import { inCommingMessage, markMessageSeen, fetchOlderMessages } from '../features/chat/ChatSlice'
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useRef, useState } from "react";
+import { getTime, getDateAndTime } from "../helper/utils";
+import {
+  inCommingMessage,
+  markMessageSeen,
+  fetchOlderMessages,
+  deleteMessage,
+  deleteMessageSingleRoom,
+} from "../features/chat/ChatSlice";
+import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
-import { getSocket } from '../socket';
-
+import { getSocket } from "../socket";
+import { handleModalStatus } from "../features/modal/modalSlice";
 
 const ChatMessages = ({ singleChatroomDetail }) => {
   const alreadySeenMessages = useRef(new Set());
   const scrollContainerRef = useRef(null);
-  const socket = getSocket()
+  const socket = getSocket();
 
   const [user, setUser] = useState({});
   const [messages, setMessages] = useState([]);
   const [isLoadingOlder, setLoadingOlder] = useState(false);
+  const [dropdownShow, setDropShow] = useState(false);
+  const [hoverMsgId, setHoverMsgId] = useState(null);
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const messageEndRef = useRef(null);
 
-  const { currentPage, totalPages } = useSelector(state => state.chatroom.chatroomPagination)
+  const { currentPage, totalPages } = useSelector(
+    (state) => state.chatroom.chatroomPagination,
+  );
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem("user");
     setUser(JSON.parse(userData));
   }, []);
-
 
   // useEffect(() => {
   //   socket.emit('active_chat', {
@@ -41,16 +50,18 @@ const ChatMessages = ({ singleChatroomDetail }) => {
   useEffect(() => {
     if (!socket || !user?._id) return;
     const handler = (data) => {
-      if (data.room.toString() === singleChatroomDetail._id.toString() && data.receiverId.toString() === user._id.toString()) {
+      if (
+        data.room.toString() === singleChatroomDetail._id.toString() &&
+        data.receiverId.toString() === user._id.toString()
+      ) {
         dispatch(inCommingMessage({ message: data.data }));
       }
-
     };
 
-    socket.on('message_received', handler);
+    socket.on("message_received", handler);
 
     return () => {
-      socket.off('message_received', handler); // clean up listener
+      socket.off("message_received", handler); // clean up listener
     };
   }, [singleChatroomDetail?._id, user?._id, socket]);
 
@@ -59,9 +70,8 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     if (!singleChatroomDetail?._id) return;
 
     socket.emit("chatroom_join", {
-      roomId: singleChatroomDetail._id
+      roomId: singleChatroomDetail._id,
     });
-
   }, [singleChatroomDetail?._id]);
 
   // receive seen message notify
@@ -69,59 +79,76 @@ const ChatMessages = ({ singleChatroomDetail }) => {
   useEffect(() => {
     if (!socket || !user?._id) return;
     const handler = ({ messageIds, roomId, seenBy }) => {
+      if (
+        roomId.toString() === singleChatroomDetail?._id.toString() &&
+        seenBy.toString() !== user?._id.toString() &&
+        messageIds &&
+        messageIds.length > 0
+      ) {
+        messageIds = messageIds.map((msgId) => msgId.toString());
 
-      if (roomId.toString() === singleChatroomDetail?._id.toString() && seenBy.toString() !== user?._id.toString() && messageIds && messageIds.length > 0) {
-        messageIds = messageIds.map(msgId => msgId.toString());
-
-        dispatch(markMessageSeen({ messageIds }))
+        dispatch(markMessageSeen({ messageIds }));
       }
     };
 
-    socket.on('message_seen_notify', handler);
+    socket.on("message_seen_notify", handler);
 
     return () => {
-      socket.off('message_seen_notify', handler); // clean up listener
+      socket.off("message_seen_notify", handler); // clean up listener
     };
   }, [socket, singleChatroomDetail?._id, user?._id]);
 
+  useEffect(()=>{
+    if(!socket) return;
+    const handler = ({roomId,receiverId,messageId})=>{
+      console.log("received message_delete socket====",{roomId,receiverId,messageId});
+      
+      if(singleChatroomDetail?._id.toString()=== roomId.toString() && receiverId.toString()===user?._id.toString()){
+        console.log("yes condition is true====");
+        
+        dispatch(deleteMessageSingleRoom({messageId,roomId}))
+      } 
+    }
+    socket.on("delete_message",handler);
+    return ()=>{
+      socket.off("delete_message",handler);
+    }
+
+  },[socket,singleChatroomDetail?._id,user?._id])
 
   useEffect(() => {
     if (!socket) return;
 
     if (messages.length > 0) {
-      const unseenMessages = messages.filter(msg => {
+      const unseenMessages = messages.filter((msg) => {
         return (
-          !msg.seen && msg.sender?._id.toString() !== user?._id.toString() &&
+          !msg.seen &&
+          msg.sender?._id.toString() !== user?._id.toString() &&
           !alreadySeenMessages.current.has(msg._id.toString())
-        )
-      })
+        );
+      });
 
       if (unseenMessages.length > 0) {
+        const unreadMessageIds = unseenMessages.map((msg) => msg._id);
 
-        const unreadMessageIds = unseenMessages.map(msg => msg._id);
+        unreadMessageIds.forEach((id) =>
+          alreadySeenMessages.current.add(id.toString()),
+        );
 
-        unreadMessageIds.forEach(id => alreadySeenMessages.current.add(id.toString()));
-        console.log("email message_seen from frontend=====>");
-
-
-        socket.emit('message_seen', {
+        socket.emit("message_seen", {
           roomId: unseenMessages[0].chatRoomId,
           seenBy: user._id,
-          unreadMessageIds: unreadMessageIds
-
-        })
+          unreadMessageIds: unreadMessageIds,
+        });
       }
     }
-
-  }, [messages, singleChatroomDetail])
-
+  }, [messages, singleChatroomDetail]);
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages])
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
-
     if (singleChatroomDetail?.messages.length > 0) {
       let chatMessages = [...singleChatroomDetail.messages]; // create a shallow copy
       chatMessages.sort((a, b) => {
@@ -131,10 +158,7 @@ const ChatMessages = ({ singleChatroomDetail }) => {
       });
       setMessages(chatMessages);
     }
-
-
-
-  }, [singleChatroomDetail])
+  }, [singleChatroomDetail]);
 
   const handleScroll = () => {
     const container = scrollContainerRef.current;
@@ -144,7 +168,12 @@ const ChatMessages = ({ singleChatroomDetail }) => {
       setLoadingOlder(true);
       const prevScrollHeight = container.scrollHeight;
 
-      dispatch(fetchOlderMessages({ id: singleChatroomDetail._id, page: currentPage + 1 }))
+      dispatch(
+        fetchOlderMessages({
+          id: singleChatroomDetail._id,
+          page: currentPage + 1,
+        }),
+      )
         .unwrap()
         .then(() => {
           setTimeout(() => {
@@ -154,14 +183,14 @@ const ChatMessages = ({ singleChatroomDetail }) => {
         })
         .finally(() => {
           setLoadingOlder(false);
-        })
+        });
     }
-  }
+  };
 
   useEffect(() => {
     const container = scrollContainerRef.current;
-    container?.addEventListener('scroll', handleScroll);
-    return () => container?.removeEventListener('scroll', handleScroll);
+    container?.addEventListener("scroll", handleScroll);
+    return () => container?.removeEventListener("scroll", handleScroll);
   }, [isLoadingOlder, currentPage, totalPages]);
 
   const renderDateSeparator = (prevMsg, currentMsg) => {
@@ -170,17 +199,17 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     const ctMsgDate = moment(currentMsg.createdAt);
     const prevMsgDate = prevMsg ? moment(prevMsg.createdAt) : null;
 
-    if (!prevMsgDate || !ctMsgDate.isSame(prevMsgDate, 'day')) {
+    if (!prevMsgDate || !ctMsgDate.isSame(prevMsgDate, "day")) {
       const today = moment();
-      const yesterday = moment().subtract(1, 'day');
+      const yesterday = moment().subtract(1, "day");
 
       let label;
-      if (ctMsgDate.isSame(today, 'day')) {
+      if (ctMsgDate.isSame(today, "day")) {
         label = "Today";
-      } else if (ctMsgDate.isSame(yesterday, 'day')) {
+      } else if (ctMsgDate.isSame(yesterday, "day")) {
         label = "Yesterday";
       } else {
-        label = ctMsgDate.format('dddd, MMMM D'); // e.g. "Monday, April 22"
+        label = ctMsgDate.format("dddd, MMMM D"); // e.g. "Monday, April 22"
       }
 
       return (
@@ -193,16 +222,26 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     return null;
   };
 
+  const handleHover = (id) => {
+    // console.log("handle hover====",id);
 
-  const handleHover = ()=>{
-    console.log("hover===========");
+    setHoverMsgId(id);
+  };
+  const handleMouseLeave = () => {
+    setHoverMsgId(null);
+  };
+
+  const handleDeleteMessage = (id,isSender) => {
+    // open modal first
     
-  }
+    dispatch(handleModalStatus({show:true,messageId:id,isSender:isSender,roomId:singleChatroomDetail._id}))
+  };
 
   return (
-    <div className="flex-grow-1 p-5 overflow-auto bg-secondary-subtle"
+    <div
+      className="flex-grow-1 p-5 overflow-auto bg-secondary-subtle"
       ref={scrollContainerRef}
-      style={{ height: '100%', overflowY: 'auto' }}
+      style={{ height: "100%", overflowY: "auto" }}
     >
       {isLoadingOlder && (
         <div className="text-center text-muted mb-3">
@@ -217,31 +256,79 @@ const ChatMessages = ({ singleChatroomDetail }) => {
           <React.Fragment key={msg._id || index}>
             {renderDateSeparator(prevMsg, msg)}
 
-            <div className={`mb-2 text-${msg.sender?._id?.toString() === user?._id?.toString() ? 'end' : 'start'}`}>
-              <div className={`d-inline-block p-2 rounded ${msg.sender?._id?.toString() === user?._id?.toString() ? 'bg-success text-white' : 'bg-white'}`}>
+            <div
+              className={`d-flex mb-2 ${msg.sender?._id?.toString() === user?._id?.toString() ? "justify-content-end" : "justify-contend-start"}`}
+              style={{
+                // maxWidth:"60%",
+                wordBreak: "break-word",
+              }}
+              onMouseEnter={() => handleHover(msg._id)}
+              onMouseLeave={handleMouseLeave}
+            >
+              <div
+                className={`p-2 rounded position-relative ${msg.sender?._id?.toString() === user?._id?.toString() ? "bg-success text-white" : "bg-white"}`}
+                style={{
+                  minWidth: "80px",
+                  maxWidth: "60%",
+                  wordBreak: "break-word",
+                }}
+              >
+                {/* Dropdown */}
+                {!msg.isDeleted && msg._id.toString() === hoverMsgId?.toString() && (
+                  <div className="position-absolute top-0 end-0 dropdown">
+                    <button
+                      className="btn btn-sm text-dark"
+                      data-bs-toggle="dropdown"
+                    >
+                      ⋮
+                    </button>
+                    <ul className="dropdown-menu">
+                      <li>
+                        <button className="dropdown-item">Reply</button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => handleDeleteMessage(msg._id,msg.sender?._id?.toString() ===
+                        user?._id?.toString())}
+                        >
+                          Delete
+                        </button>
+                      </li>
+                      {msg.sender?._id?.toString() ===
+                        user?._id?.toString() && (
+                        <li>
+                          <button className="dropdown-item">Edit</button>
+                        </li>
+                      )}
 
-                <div>{msg.content}</div>
+                      <li>
+                        <button className="dropdown-item">Copy</button>
+                      </li>
+                    </ul>
+                  </div>
+                )}
 
-                {msg.type === 'image' && (
-                  <img src={msg.file?.url} height={100} width={200} alt="chat-img" />
+                <div>{msg.isDeleted ? "Message deleted" : msg.content}</div>
+
+                {msg.type === "image" && (
+                  <img
+                    src={msg.file?.url}
+                    height={100}
+                    width={200}
+                    alt="chat-img"
+                  />
                 )}
                 <small className="d-block text-muted text-end">
                   {getTime(msg.createdAt)}
                   {msg.sender?._id?.toString() === user?._id?.toString() && (
-                    <span className="tick" style={{ color: msg.seen ? 'blue' : 'black' }}>
+                    <span
+                      className="tick"
+                      style={{ color: msg.seen ? "blue" : "black" }}
+                    >
                       &#10003;&#10003;
                     </span>
                   )}
-                  <div class="dropdown" style={{display:"none"}} onMouseEnter={handleHover}>
-                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      {/* Dropdown button */}
-                    </button>
-                    <ul class="dropdown-menu">
-                      <li><a class="dropdown-item" href="#">Action</a></li>
-                      <li><a class="dropdown-item" href="#">Another action</a></li>
-                      <li><a class="dropdown-item" href="#">Something else here</a></li>
-                    </ul>
-                  </div>
                 </small>
               </div>
             </div>
@@ -251,6 +338,6 @@ const ChatMessages = ({ singleChatroomDetail }) => {
       <div ref={messageEndRef} />
     </div>
   );
-}
+};
 
 export default ChatMessages;
