@@ -15,7 +15,8 @@ import Friends from './pages/Friends';
 import UserProfile from './pages/UserProfile';
 import Chats from './pages/Chats';
 import {initSocket} from './socket'
-import ExampleModal from './components/ExampleModal';
+import ExampleModal from './components/DeleteModal';
+import FileUploadModal from './components/FileUploadModal';
 
 function AppContent() {
 

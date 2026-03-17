@@ -99,7 +99,6 @@ export const sendMessageInRoom = createAsyncThunk('chatroom/sendMessage', async 
 })
 
 export const deleteMessage = createAsyncThunk('chatroom/deleteMessage', async (payload, thunkAPI) => {
-    console.log("inside the deleteMessage thunk api===>", payload);
 
     try {
         let res = await axiosInstance.delete(

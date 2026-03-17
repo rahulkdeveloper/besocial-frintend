@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
 import { getSocket } from "../socket";
 import { handleModalStatus } from "../features/modal/modalSlice";
+import './ChatMessage.css';
 
 const ChatMessages = ({ singleChatroomDetail }) => {
   const alreadySeenMessages = useRef(new Set());
@@ -98,23 +99,29 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     };
   }, [socket, singleChatroomDetail?._id, user?._id]);
 
-  useEffect(()=>{
-    if(!socket) return;
-    const handler = ({roomId,receiverId,messageId})=>{
-      console.log("received message_delete socket====",{roomId,receiverId,messageId});
-      
-      if(singleChatroomDetail?._id.toString()=== roomId.toString() && receiverId.toString()===user?._id.toString()){
-        console.log("yes condition is true====");
-        
-        dispatch(deleteMessageSingleRoom({messageId,roomId}))
-      } 
-    }
-    socket.on("delete_message",handler);
-    return ()=>{
-      socket.off("delete_message",handler);
-    }
+  useEffect(() => {
+    if (!socket) return;
+    const handler = ({ roomId, receiverId, messageId }) => {
+      console.log("received message_delete socket====", {
+        roomId,
+        receiverId,
+        messageId,
+      });
 
-  },[socket,singleChatroomDetail?._id,user?._id])
+      if (
+        singleChatroomDetail?._id.toString() === roomId.toString() &&
+        receiverId.toString() === user?._id.toString()
+      ) {
+        console.log("yes condition is true====");
+
+        dispatch(deleteMessageSingleRoom({ messageId, roomId }));
+      }
+    };
+    socket.on("delete_message", handler);
+    return () => {
+      socket.off("delete_message", handler);
+    };
+  }, [socket, singleChatroomDetail?._id, user?._id]);
 
   useEffect(() => {
     if (!socket) return;
@@ -231,10 +238,17 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     setHoverMsgId(null);
   };
 
-  const handleDeleteMessage = (id,isSender) => {
+  const handleDeleteMessage = (id, isSender) => {
     // open modal first
-    
-    dispatch(handleModalStatus({show:true,messageId:id,isSender:isSender,roomId:singleChatroomDetail._id}))
+
+    dispatch(
+      handleModalStatus({
+        show: true,
+        messageId: id,
+        isSender: isSender,
+        roomId: singleChatroomDetail._id,
+      }),
+    );
   };
 
   return (
@@ -274,42 +288,48 @@ const ChatMessages = ({ singleChatroomDetail }) => {
                 }}
               >
                 {/* Dropdown */}
-                {!msg.isDeleted && msg._id.toString() === hoverMsgId?.toString() && (
-                  <div className="position-absolute top-0 end-0 dropdown">
-                    <button
-                      className="btn btn-sm text-dark"
-                      data-bs-toggle="dropdown"
-                    >
-                      ⋮
-                    </button>
-                    <ul className="dropdown-menu">
-                      <li>
-                        <button className="dropdown-item">Reply</button>
-                      </li>
-                      <li>
-                        <button
-                          className="dropdown-item"
-                          onClick={() => handleDeleteMessage(msg._id,msg.sender?._id?.toString() ===
-                        user?._id?.toString())}
-                        >
-                          Delete
-                        </button>
-                      </li>
-                      {msg.sender?._id?.toString() ===
-                        user?._id?.toString() && (
+                {!msg.isDeleted &&
+                  msg._id.toString() === hoverMsgId?.toString() && (
+                    <div className="position-absolute top-0 end-0 dropdown">
+                      <button
+                        className="btn btn-sm text-dark"
+                        data-bs-toggle="dropdown"
+                      >
+                        ⋮
+                      </button>
+                      <ul className="dropdown-menu">
                         <li>
-                          <button className="dropdown-item">Edit</button>
+                          <button className="dropdown-item">Reply</button>
                         </li>
-                      )}
+                        <li>
+                          <button
+                            className="dropdown-item"
+                            onClick={() =>
+                              handleDeleteMessage(
+                                msg._id,
+                                msg.sender?._id?.toString() ===
+                                  user?._id?.toString(),
+                              )
+                            }
+                          >
+                            Delete
+                          </button>
+                        </li>
+                        {msg.sender?._id?.toString() ===
+                          user?._id?.toString() && (
+                          <li>
+                            <button className="dropdown-item">Edit</button>
+                          </li>
+                        )}
 
-                      <li>
-                        <button className="dropdown-item">Copy</button>
-                      </li>
-                    </ul>
-                  </div>
-                )}
+                        <li>
+                          <button className="dropdown-item">Copy</button>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
 
-                <div>{msg.isDeleted ? "Message deleted" : msg.content}</div>
+                {/* <div>{msg.isDeleted ? "Message deleted" : msg.content}</div>
 
                 {msg.type === "image" && (
                   <img
@@ -319,6 +339,44 @@ const ChatMessages = ({ singleChatroomDetail }) => {
                     alt="chat-img"
                   />
                 )}
+
+                {msg.type === "video" && (
+                  <video>
+                    <source src={SiMg.file?.url} type={msg.type} />
+                  </video>
+                )} */}
+
+                {msg.isDeleted ? (
+                  <div>Message deleted</div>
+                ) : (
+                  <>
+                    {msg.type === "text" && <div>{msg.content}</div>}
+
+                    {msg.type === "image" && (
+                      <div className="chat-image-msg">
+                        <img
+                          src={msg.file?.url}
+                          height={100}
+                          width={200}
+                          alt="chat-img"
+                          className="chat-image rounded"
+                          onClick={()=> window.open(msg.file?.url)}
+                        />
+                        {msg.fileText && <p className="chat-image-caption">{msg.fileText}</p>}
+                      </div>
+                    )}
+
+                    {msg.type === "video" && (
+                      <div>
+                        <video height={120} controls>
+                          <source src={msg.file?.url} type="video/mp4" />
+                        </video>
+                        {msg.fileText && <p>{msg.fileText}</p>}
+                      </div>
+                    )}
+                  </>
+                )}
+
                 <small className="d-block text-muted text-end">
                   {getTime(msg.createdAt)}
                   {msg.sender?._id?.toString() === user?._id?.toString() && (

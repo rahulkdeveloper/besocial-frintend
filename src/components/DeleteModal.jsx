@@ -8,11 +8,9 @@ function ExampleModal() {
   const { showModal, messageId, isSender, roomId } = useSelector(
     (state) => state.modal,
   );
-  // const [show, setShow] = useState(false);
   const dispatch = useDispatch();
 
   const handleClose = () => dispatch(handleModalStatus(false));
-  // const handleShow = () => dispatch(handleModalStatus(true));
 
   const handleDeleteMessage = (type) => {
     dispatch(deleteMessage({ messageId: messageId, roomId, type }));
@@ -21,19 +19,12 @@ function ExampleModal() {
 
   return (
     <>
-      {/* <Button variant="primary" onClick={handleShow} hidden>
-        Open Modal
-      </Button> */}
-
       <Modal show={showModal} onHide={handleClose} centered>
-        {/* <Modal.Header closeButton>
-          <Modal.Title>My Modal</Modal.Title>
-        </Modal.Header> */}
 
         <Modal.Body>
           Delete Message?
           <div
-            className="container d-flex align-content-end flex-column mt-3 py-3"
+            className="container d-flex align-content-end flex-column gap-1 mt-3 py-3"
             style={{
               maxWidth: "50%",
             }}
@@ -64,14 +55,6 @@ function ExampleModal() {
           </div>
         </Modal.Body>
 
-        {/* <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary">
-            Save Changes
-          </Button>
-        </Modal.Footer> */}
       </Modal>
     </>
   );
