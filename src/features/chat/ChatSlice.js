@@ -13,6 +13,8 @@ const initialState = {
     sendMessageStatus: "idle",
     deleteMessageStatus: "idle",
     deleteMessageError: null,
+    editMessageStatus: "idle",
+    editMessageError: null,
     chatroomPagination: {
         currentPage: 1,
         totalPages: 1,
@@ -112,7 +114,25 @@ export const deleteMessage = createAsyncThunk('chatroom/deleteMessage', async (p
 
     } catch (error) {
         console.log("error in deleteMessage function", error);
-        throw new Error(error.response.data.message || error.response.data.errors || "sendMessageInRoom failed")
+        throw new Error(error.response.data.message || error.response.data.errors || "deleteMessage failed")
+
+    }
+})
+
+export const editMessage = createAsyncThunk('chatroom/editMessage', async (payload, thunkAPI) => {
+    console.log("inside the editMessage thunk api====>", payload);
+
+    try {
+        let res = await axiosInstance.put(
+            `/chatroom/${payload.roomId}/message/${payload.messageId}`,
+            payload.data
+        );
+
+        return res.data
+
+    } catch (error) {
+        console.log("error in editMessage function", error);
+        throw new Error(error.response.data.message || error.response.data.errors || "editMessage failed")
 
     }
 })
@@ -174,11 +194,45 @@ const chatroomSlice = createSlice({
                     console.log("chatroom====", chatroom);
 
                     if (chatroom && chatroom.currentMessage?._id.toString() === messageId.toString()) {
-                        state.allChatrooms[chatroomIndex].currentMessage = {...state.allChatrooms[chatroomIndex].currentMessage,isDeleted:true}
+                        state.allChatrooms[chatroomIndex].currentMessage = { ...state.allChatrooms[chatroomIndex].currentMessage, isDeleted: true }
                     }
                 }
 
             }
+        },
+        EditMessageSingleRoom: (state, action) => {
+            const { messageId, roomId, editMessage } = action.payload;
+            delete editMessage.type;
+            console.log("editMessage==========", editMessage);
+
+            if (state.singleChatroomDetail && state.singleChatroomDetail?._id.toString() === roomId.toString()) {
+                const findIndex = state.singleChatroomDetail.messages.findIndex(msg => msg?._id.toString() === messageId?.toString());
+
+                if (findIndex !== -1) {
+                    let currentMessage = state.singleChatroomDetail.messages[findIndex]
+
+                    state.singleChatroomDetail.messages[findIndex] = { ...currentMessage, isEdited: true, ...editMessage }
+                }
+
+
+            }
+
+            // update in allchatrooms list current message...
+            const chatroomIndex = state.allChatrooms.findIndex(room => room._id.toString() === roomId.toString());
+
+            console.log("chatroomIndex====", chatroomIndex);
+
+
+            if (chatroomIndex !== -1 && state.allChatrooms[chatroomIndex]) {
+                let chatroom = state.allChatrooms[chatroomIndex];
+                console.log("chatroom====", chatroom);
+
+                if (chatroom && chatroom.currentMessage?._id.toString() === messageId.toString()) {
+                    state.allChatrooms[chatroomIndex].currentMessage = { ...state.allChatrooms[chatroomIndex].currentMessage, ...editMessage }
+                }
+            }
+
+
         },
         unReadIncomingMessage: (state, action) => {
             const message = action.payload.message;
@@ -320,10 +374,44 @@ const chatroomSlice = createSlice({
                 state.deleteMessageStatus = 'failed';
                 state.deleteMessageError = action.error.message
             })
+            .addCase(editMessage.pending, (state) => {
+                state.editMessageStatus = 'loading'
+            })
+            .addCase(editMessage.fulfilled, (state, action) => {
+                state.editMessageStatus = 'success';
+
+                const { _id: messageId, roomId } = action.payload.data;
+
+                if (state.singleChatroomDetail && state.singleChatroomDetail?._id.toString() === roomId.toString()) {
+
+                    const findIndex = state.singleChatroomDetail.messages.findIndex(msg => msg?._id.toString() === messageId?.toString());
+                    if (findIndex !== -1) {
+
+                        state.singleChatroomDetail.messages[findIndex] = action.payload.data
+                    }
+                }
+
+                // // update in allchatrooms list current message...
+                const chatroomIndex = state.allChatrooms.findIndex(room => room._id.toString() === state.singleChatroomDetail._id.toString());
+
+                if (chatroomIndex !== -1 && state.allChatrooms[chatroomIndex]) {
+                    let chatroom = state.allChatrooms[chatroomIndex];
+
+                    if (chatroom && chatroom.currentMessage?._id.toString() === messageId.toString()) {
+                        state.allChatrooms[chatroomIndex].currentMessage = action.payload.data;
+                    }
+                }
+
+
+            })
+            .addCase(editMessage.rejected, (state, action) => {
+                state.editMessageStatus = 'failed';
+                state.editMessageError = action.error.message
+            })
     }
 })
 
-export const { resetStatusAndErrors, startChat, resetChatroomDetail, inCommingMessage, unReadIncomingMessage, markMessageSeen, deleteMessageSingleRoom } = chatroomSlice.actions
+export const { resetStatusAndErrors, startChat, resetChatroomDetail, inCommingMessage, unReadIncomingMessage, markMessageSeen, deleteMessageSingleRoom, EditMessageSingleRoom } = chatroomSlice.actions
 
 
 export default chatroomSlice.reducer

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Image, Badge } from "react-bootstrap";
-import { getDateAndTime } from "../helper/utils";
+import { getDateAndTime, textShorter } from "../helper/utils";
 import { constant } from "../config/config";
 import { FaImage } from "react-icons/fa";
-import { startChat } from "../features/chat/ChatSlice";
+import { EditMessageSingleRoom, startChat } from "../features/chat/ChatSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { unReadIncomingMessage } from "../features/chat/ChatSlice";
 import { getSocket } from "../socket";
@@ -45,6 +45,30 @@ const ChatSidebar = ({ allChatrooms }) => {
     };
   }, [socket, user?._id, singleChatroomDetail?._id]);
 
+  useEffect(() => {
+    if (!socket) return;
+    const handler = ({ roomId, receiverId, messageId, editMessage }) => {
+      console.log("received edit_message socket in sidebar====", {
+        roomId,
+        receiverId,
+        messageId,
+        editMessage,
+      });
+
+      if (
+        receiverId.toString() === user?._id.toString() &&
+        (!singleChatroomDetail ||
+          singleChatroomDetail?._id.toString() !== roomId.toString())
+      ) {
+        dispatch(EditMessageSingleRoom({ messageId, roomId, editMessage }));
+      }
+    };
+    socket.on("edit_message", handler);
+    return () => {
+      socket.off("edit_message", handler);
+    };
+  }, [socket, singleChatroomDetail?._id, user?._id]);
+
   return (
     <div className="chat-sidebar bg-light border-end p-2">
       <h5 className="ps-2">Chats</h5>
@@ -82,7 +106,7 @@ const ChatSidebar = ({ allChatrooms }) => {
                     "Message deleted"
                   ) : room.currentMessage?.type === "text" &&
                     room.currentMessage?.content ? (
-                    room.currentMessage.content
+                    textShorter(room.currentMessage.content)
                   ) : room.currentMessage?.type ? (
                     <>
                       <FaImage className="mx-1" />

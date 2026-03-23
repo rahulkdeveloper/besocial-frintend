@@ -6,12 +6,17 @@ import {
   fetchOlderMessages,
   deleteMessage,
   deleteMessageSingleRoom,
+  EditMessageSingleRoom,
 } from "../features/chat/ChatSlice";
 import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
 import { getSocket } from "../socket";
-import { handleModalStatus } from "../features/modal/modalSlice";
-import './ChatMessage.css';
+import {
+  handleEditMessageModal,
+  handleModalStatus,
+} from "../features/modal/modalSlice";
+import "./ChatMessage.css";
+import EditMessageModal from "./EditMessageModal";
 
 const ChatMessages = ({ singleChatroomDetail }) => {
   const alreadySeenMessages = useRef(new Set());
@@ -102,17 +107,11 @@ const ChatMessages = ({ singleChatroomDetail }) => {
   useEffect(() => {
     if (!socket) return;
     const handler = ({ roomId, receiverId, messageId }) => {
-      console.log("received message_delete socket====", {
-        roomId,
-        receiverId,
-        messageId,
-      });
 
       if (
         singleChatroomDetail?._id.toString() === roomId.toString() &&
         receiverId.toString() === user?._id.toString()
       ) {
-        console.log("yes condition is true====");
 
         dispatch(deleteMessageSingleRoom({ messageId, roomId }));
       }
@@ -120,6 +119,30 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     socket.on("delete_message", handler);
     return () => {
       socket.off("delete_message", handler);
+    };
+  }, [socket, singleChatroomDetail?._id, user?._id]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handler = ({ roomId, receiverId, messageId,editMessage }) => {
+      console.log("received edit_message socket====", {
+        roomId,
+        receiverId,
+        messageId,
+        editMessage
+      });
+
+      if (
+        singleChatroomDetail?._id.toString() === roomId.toString() &&
+        receiverId.toString() === user?._id.toString()
+      ) {
+
+        dispatch(EditMessageSingleRoom({ messageId, roomId,editMessage }));
+      }
+    };
+    socket.on("edit_message", handler);
+    return () => {
+      socket.off("edit_message", handler);
     };
   }, [socket, singleChatroomDetail?._id, user?._id]);
 
@@ -251,6 +274,14 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     );
   };
 
+  const handleMessageCopy = async (message) => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+    } catch (error) {
+      console.log("Error in copy", error);
+    }
+  };
+
   return (
     <div
       className="flex-grow-1 p-5 overflow-auto bg-secondary-subtle"
@@ -318,12 +349,29 @@ const ChatMessages = ({ singleChatroomDetail }) => {
                         {msg.sender?._id?.toString() ===
                           user?._id?.toString() && (
                           <li>
-                            <button className="dropdown-item">Edit</button>
+                            <button
+                              className="dropdown-item"
+                              onClick={() =>
+                                dispatch(
+                                  handleEditMessageModal({
+                                    isShow: true,
+                                    message: msg,
+                                  }),
+                                )
+                              }
+                            >
+                              Edit
+                            </button>
                           </li>
                         )}
 
                         <li>
-                          <button className="dropdown-item">Copy</button>
+                          <button
+                            className="dropdown-item"
+                            onClick={() => handleMessageCopy(msg)}
+                          >
+                            Copy
+                          </button>
                         </li>
                       </ul>
                     </div>
@@ -360,9 +408,11 @@ const ChatMessages = ({ singleChatroomDetail }) => {
                           width={200}
                           alt="chat-img"
                           className="chat-image rounded"
-                          onClick={()=> window.open(msg.file?.url)}
+                          onClick={() => window.open(msg.file?.url)}
                         />
-                        {msg.fileText && <p className="chat-image-caption">{msg.fileText}</p>}
+                        {msg.fileText && (
+                          <p className="chat-image-caption">{msg.fileText}</p>
+                        )}
                       </div>
                     )}
 
@@ -377,7 +427,9 @@ const ChatMessages = ({ singleChatroomDetail }) => {
                   </>
                 )}
 
-                <small className="d-block text-muted text-end">
+                <small className="d-flex justify-content-end text-muted gap-1"
+                >
+                  {msg.isEdited && <span>isEdited</span>}
                   {getTime(msg.createdAt)}
                   {msg.sender?._id?.toString() === user?._id?.toString() && (
                     <span

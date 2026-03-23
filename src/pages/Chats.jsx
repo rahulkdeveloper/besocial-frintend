@@ -3,6 +3,7 @@ import ChatSidebar from '../components/ChatSidebar'
 import ChatWindow from '../components/ChatWindow'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchChatrooms } from '../features/chat/ChatSlice';
+import EditMessageModal from '../components/EditMessageModal';
 
 const Chats = () => {
 
@@ -28,6 +29,7 @@ const Chats = () => {
                     <h3>Besocial website</h3>
                 </div>
             }
+            <EditMessageModal/>
 
         </div>
     )

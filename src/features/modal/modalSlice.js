@@ -5,7 +5,9 @@ const initialState = {
     messageId: null,
     isSender: false,
     roomId: null,
-    isFileModalShow:false
+    isFileModalShow: false,
+    editMessageModalShow: false,
+    selectedMessage:null
 }
 
 const modalSlice = createSlice({
@@ -19,11 +21,16 @@ const modalSlice = createSlice({
             state.roomId = action.payload.roomId;
         },
         handleFileUploadModal: (state, action) => {
-            
+
             state.isFileModalShow = action.payload.isFileModalShow
+        },
+        handleEditMessageModal: (state, action) => {
+            state.editMessageModalShow = action.payload.isShow;
+            state.selectedMessage = action.payload.message || null;
+
         }
     }
 })
 
-export const { handleModalStatus, handleFileUploadModal } = modalSlice.actions;
+export const { handleModalStatus, handleFileUploadModal,handleEditMessageModal } = modalSlice.actions;
 export default modalSlice.reducer;

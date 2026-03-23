@@ -31,3 +31,10 @@ export const getCompleteTime = (date) => {
     let givenMoment = moment(date);
     return givenMoment.format("HH:mm, D MMMM YYYY");
 };
+
+export const textShorter = (text)=>{
+    if(text.length>25){
+        text = `${text.slice(0,25)}...`
+    }
+    return text
+}
