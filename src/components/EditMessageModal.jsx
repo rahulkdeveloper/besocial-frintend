@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { handleEditMessageModal } from "../features/modal/modalSlice";
 import axiosInstance from "../api/axiosInstance";
 import { editMessage } from "../features/chat/ChatSlice";
+import EmojiPickr from "./EmojiPickr";
 
 const EditMessageModal = () => {
   const [msgText, setMessageText] = useState("");
@@ -15,6 +16,10 @@ const EditMessageModal = () => {
   const { editMessageStatus, editMessageError } = useSelector(
     (state) => state.chatroom,
   );
+
+  const handleSelectedEmoji = (emojiData) => {
+    setMessageText((prev) => prev + emojiData.emoji);
+  };
 
   useEffect(() => {
     if (selectedMessage) {
@@ -85,6 +90,7 @@ const EditMessageModal = () => {
                 value={msgText}
                 onChange={(e) => setMessageText(e.target.value)}
               />
+              <EmojiPickr handleSelectedEmoji={handleSelectedEmoji} />
               <Button onClick={handleEditMessage}>Edit</Button>
             </div>
           </>

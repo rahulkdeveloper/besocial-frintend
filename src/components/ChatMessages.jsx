@@ -7,10 +7,11 @@ import {
   deleteMessage,
   deleteMessageSingleRoom,
   EditMessageSingleRoom,
+  setReplyMessage,
 } from "../features/chat/ChatSlice";
 import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
-import { getSocket } from "../socket";
+import { getSocket } from "../socket/socket";
 import {
   handleEditMessageModal,
   handleModalStatus,
@@ -42,35 +43,6 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     setUser(JSON.parse(userData));
   }, []);
 
-  // useEffect(() => {
-  //   socket.emit('active_chat', {
-  //     targetUserId: singleChatroomDetail.friend?._id,
-  //     roomDetail: {
-  //       userId: singleChatroomDetail.sender?._id,
-  //       roomId: singleChatroomDetail._id
-  //     }
-  //   })
-  // }, [singleChatroomDetail])
-
-  // new message notification
-  useEffect(() => {
-    if (!socket || !user?._id) return;
-    const handler = (data) => {
-      if (
-        data.room.toString() === singleChatroomDetail._id.toString() &&
-        data.receiverId.toString() === user._id.toString()
-      ) {
-        dispatch(inCommingMessage({ message: data.data }));
-      }
-    };
-
-    socket.on("message_received", handler);
-
-    return () => {
-      socket.off("message_received", handler); // clean up listener
-    };
-  }, [singleChatroomDetail?._id, user?._id, socket]);
-
   useEffect(() => {
     if (!socket) return;
     if (!singleChatroomDetail?._id) return;
@@ -80,39 +52,13 @@ const ChatMessages = ({ singleChatroomDetail }) => {
     });
   }, [singleChatroomDetail?._id]);
 
-  // receive seen message notify
-
-  useEffect(() => {
-    if (!socket || !user?._id) return;
-    const handler = ({ messageIds, roomId, seenBy }) => {
-      if (
-        roomId.toString() === singleChatroomDetail?._id.toString() &&
-        seenBy.toString() !== user?._id.toString() &&
-        messageIds &&
-        messageIds.length > 0
-      ) {
-        messageIds = messageIds.map((msgId) => msgId.toString());
-
-        dispatch(markMessageSeen({ messageIds }));
-      }
-    };
-
-    socket.on("message_seen_notify", handler);
-
-    return () => {
-      socket.off("message_seen_notify", handler); // clean up listener
-    };
-  }, [socket, singleChatroomDetail?._id, user?._id]);
-
   useEffect(() => {
     if (!socket) return;
     const handler = ({ roomId, receiverId, messageId }) => {
-
       if (
         singleChatroomDetail?._id.toString() === roomId.toString() &&
         receiverId.toString() === user?._id.toString()
       ) {
-
         dispatch(deleteMessageSingleRoom({ messageId, roomId }));
       }
     };
@@ -124,20 +70,19 @@ const ChatMessages = ({ singleChatroomDetail }) => {
 
   useEffect(() => {
     if (!socket) return;
-    const handler = ({ roomId, receiverId, messageId,editMessage }) => {
+    const handler = ({ roomId, receiverId, messageId, editMessage }) => {
       console.log("received edit_message socket====", {
         roomId,
         receiverId,
         messageId,
-        editMessage
+        editMessage,
       });
 
       if (
         singleChatroomDetail?._id.toString() === roomId.toString() &&
         receiverId.toString() === user?._id.toString()
       ) {
-
-        dispatch(EditMessageSingleRoom({ messageId, roomId,editMessage }));
+        dispatch(EditMessageSingleRoom({ messageId, roomId, editMessage }));
       }
     };
     socket.on("edit_message", handler);
@@ -281,6 +226,17 @@ const ChatMessages = ({ singleChatroomDetail }) => {
       console.log("Error in copy", error);
     }
   };
+  const handleReplyMessage = (message) => {
+    let msg = {
+      _id: message._id,
+      content: message.content,
+      type: message.type,
+      fileText: message.fileText,
+      sender: message.sender,
+      receiver: message.receiver,
+    };
+    dispatch(setReplyMessage(msg));
+  };
 
   return (
     <div
@@ -318,19 +274,71 @@ const ChatMessages = ({ singleChatroomDetail }) => {
                   wordBreak: "break-word",
                 }}
               >
+                {/* reply On preview  */}
+
+                {msg.replyTo && (
+                  <div
+                    className="p-2"
+                    style={{
+                      borderLeft: "4px solid #141a16",
+                      borderRadius: "6px",
+                      backgroundColor: "#2c312d",
+                    }}
+                  >
+                    <div style={{ maxWidth: "90%" }}>
+                      {/* 👤 Sender Name (optional but recommended) */}
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          color: "#25D366",
+                        }}
+                      >
+                        {msg?.replyTo?.sender?._id.toString() ===
+                        user?._id.toString()
+                          ? "You"
+                          : msg?.receiver?.fullName}
+                      </div>
+
+                      {/* 💬 Message Preview */}
+                      <div
+                        style={{
+                          fontSize: "14px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          color: "white",
+                        }}
+                      >
+                        {msg.replyTo?.content || "📎 Attachment"}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Dropdown */}
                 {!msg.isDeleted &&
                   msg._id.toString() === hoverMsgId?.toString() && (
                     <div className="position-absolute top-0 end-0 dropdown">
                       <button
-                        className="btn btn-sm text-dark"
+                        className={`btn btn-sm text-dark ${
+                          msg.sender?._id?.toString() !==
+                            user?._id?.toString() && !msg.replyTo?._id
+                            ? "text-dark"
+                            : "text-white"
+                        }`}
                         data-bs-toggle="dropdown"
                       >
                         ⋮
                       </button>
                       <ul className="dropdown-menu">
                         <li>
-                          <button className="dropdown-item">Reply</button>
+                          <button
+                            className="dropdown-item"
+                            onClick={() => handleReplyMessage(msg)}
+                          >
+                            Reply
+                          </button>
                         </li>
                         <li>
                           <button
@@ -427,8 +435,7 @@ const ChatMessages = ({ singleChatroomDetail }) => {
                   </>
                 )}
 
-                <small className="d-flex justify-content-end text-muted gap-1"
-                >
+                <small className="d-flex justify-content-end text-muted gap-1">
                   {msg.isEdited && <span>isEdited</span>}
                   {getTime(msg.createdAt)}
                   {msg.sender?._id?.toString() === user?._id?.toString() && (

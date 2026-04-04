@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { FaVideo, FaMobile } from 'react-icons/fa';
 import { getCompleteTime } from '../helper/utils'
-import { getSocket } from '../socket';
+import { getSocket } from '../socket/socket';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const ChatHeader = ({ name, status, image, chatroomId }) => {
-  const socket = getSocket()
+  const socket = getSocket();
+  const navigate = useNavigate()
 
   const [userActiveDetail, setUserActiveDetail] = useState({ status: status });
   const {singleChatroomDetail} = useSelector(state=>state.chatroom);
@@ -46,7 +48,7 @@ const ChatHeader = ({ name, status, image, chatroomId }) => {
 
       </div>
       <div>
-        <FaVideo />
+        <FaVideo onClick={()=> navigate("/video/123")} />
         {/* <FaMobile/> */}
       </div>
     </div>

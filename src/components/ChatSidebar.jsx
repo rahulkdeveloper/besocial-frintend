@@ -6,7 +6,7 @@ import { FaImage } from "react-icons/fa";
 import { EditMessageSingleRoom, startChat } from "../features/chat/ChatSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { unReadIncomingMessage } from "../features/chat/ChatSlice";
-import { getSocket } from "../socket";
+import { getSocket } from "../socket/socket";
 
 const ChatSidebar = ({ allChatrooms }) => {
   const socket = getSocket();
@@ -27,23 +27,23 @@ const ChatSidebar = ({ allChatrooms }) => {
     (state) => state.chatroom,
   );
 
-  useEffect(() => {
-    if (!socket || !user?._id) return;
-    const handler = (data) => {
-      if (
-        data.receiverId.toString() === user?._id.toString() &&
-        data.room.toString() !== singleChatroomDetail?._id.toString()
-      ) {
-        dispatch(unReadIncomingMessage({ message: data.data, type: "unread" }));
-      }
-    };
+  // useEffect(() => {
+  //   if (!socket || !user?._id) return;
+  //   const handler = (data) => {
+  //     if (
+  //       data.receiverId.toString() === user?._id.toString() &&
+  //       data.room.toString() !== singleChatroomDetail?._id.toString()
+  //     ) {
+  //       dispatch(unReadIncomingMessage({ message: data.data, type: "unread" }));
+  //     }
+  //   };
 
-    socket.on("unread_messages", handler);
+  //   socket.on("unread_messages", handler);
 
-    return () => {
-      socket.off("unread_messages", handler); // clean up listener
-    };
-  }, [socket, user?._id, singleChatroomDetail?._id]);
+  //   return () => {
+  //     socket.off("unread_messages", handler); // clean up listener
+  //   };
+  // }, [socket, user?._id, singleChatroomDetail?._id]);
 
   useEffect(() => {
     if (!socket) return;

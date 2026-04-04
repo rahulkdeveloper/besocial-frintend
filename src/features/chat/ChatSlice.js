@@ -15,6 +15,7 @@ const initialState = {
     deleteMessageError: null,
     editMessageStatus: "idle",
     editMessageError: null,
+    replyMessage: null,
     chatroomPagination: {
         currentPage: 1,
         totalPages: 1,
@@ -159,18 +160,69 @@ const chatroomSlice = createSlice({
             state.fetchSingleChatroomStatus = 'idle';
             state.chatroomId = null;
         },
+        setReplyMessage:(state,action)=>{
+            state.replyMessage = action.payload
+        },
+        clearReplyMessage: (state) => {
+            state.replyMessage = null;
+        },
         inCommingMessage: (state, action) => {
-            state.singleChatroomDetail.messages.push(action.payload.message);
+            console.log("payload", action.payload);
 
-            // update current message received in chatlist of receiver...
-            const index = state.allChatrooms.findIndex(room => room._id.toString() === state.singleChatroomDetail?._id.toString());
+            const { roomId, message } = action.payload;
+
+            const index = state.allChatrooms.findIndex(room => room._id.toString() === roomId.toString());
+
+            console.log("index===", index);
+
+
             if (index !== -1) {
-                state.allChatrooms[index].currentMessage = action.payload.message
+                state.allChatrooms[index].currentMessage = message
+
+                // if user open same room...
+                if (state.singleChatroomDetail?._id.toString() === roomId.toString()) {
+                    state.singleChatroomDetail.messages.push(message);
+                }
+                // user not open any room or in another room...
+                else {
+                    console.log("increament unread message count+++");
+
+                    // increament unread count...
+                    state.allChatrooms[index].unreadMessageCount = (state.allChatrooms[index].unreadMessageCount || 0) + 1;
+
+                    state.allChatrooms.sort((a, b) => {
+                        const unreadDiff = (b.unreadMessageCount || 0) - (a.unreadMessageCount || 0);
+
+                        if (unreadDiff !== 0) {
+                            return unreadDiff;
+                        }
+
+                        const aTime = a.currentMessage?.createdAt ? new Date(a.currentMessage.createdAt).getTime() : 0;
+                        const bTime = b.currentMessage?.createdAt ? new Date(b.currentMessage.createdAt).getTime() : 0;
+
+                        return bTime - aTime; // Newer messages come first
+                    });
+
+                }
             }
+
         },
         markMessageSeen: (state, action) => {
-            const { messageIds } = action.payload;
-            state.singleChatroomDetail.messages = state.singleChatroomDetail.messages.map(msg => messageIds.includes(msg._id.toString()) ? { ...msg, seen: true } : msg)
+            const { messageIds, roomId } = action.payload;
+
+            if (!roomId || !messageIds) return; // ✅ safety
+
+            if (
+                state.singleChatroomDetail?._id &&
+                roomId.toString() === state.singleChatroomDetail._id.toString()
+            ) {
+                state.singleChatroomDetail.messages =
+                    state.singleChatroomDetail.messages.map((msg) =>
+                        messageIds.includes(msg._id.toString())
+                            ? { ...msg, seen: true }
+                            : msg
+                    );
+            }
         },
         deleteMessageSingleRoom: (state, action) => {
             const { messageId, roomId } = action.payload;
@@ -411,7 +463,7 @@ const chatroomSlice = createSlice({
     }
 })
 
-export const { resetStatusAndErrors, startChat, resetChatroomDetail, inCommingMessage, unReadIncomingMessage, markMessageSeen, deleteMessageSingleRoom, EditMessageSingleRoom } = chatroomSlice.actions
+export const { resetStatusAndErrors, startChat, resetChatroomDetail, inCommingMessage, unReadIncomingMessage, markMessageSeen, deleteMessageSingleRoom, EditMessageSingleRoom ,clearReplyMessage,setReplyMessage} = chatroomSlice.actions
 
 
 export default chatroomSlice.reducer

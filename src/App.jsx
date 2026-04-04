@@ -14,22 +14,33 @@ import FriendRequest from './pages/FriendRequest';
 import Friends from './pages/Friends';
 import UserProfile from './pages/UserProfile';
 import Chats from './pages/Chats';
-import {initSocket} from './socket'
+import {initSocket} from './socket/socket'
 import ExampleModal from './components/DeleteModal';
 import FileUploadModal from './components/FileUploadModal';
+import { useSelector } from 'react-redux';
+import { initSocketListeners } from './socket/socketListeners';
+import VideoRoom from './pages/VideoRoom';
 
 function AppContent() {
+  const user = useSelector(state=> state.auth.user);
 
   const location = useLocation();
   useEffect(()=>{
     initSocket();
   },[]);
 
+
+  useEffect(()=>{
+    if(user?._id){
+      initSocketListeners(user._id)
+    }
+  },[user?._id])
+
   return (
     <>
       <AnimationAlert />
       <ExampleModal/>
-      {!['/login', '/signup'].includes(location.pathname) ? (
+      {!['/login', '/signup',''].includes(location.pathname) ? (
         <div>
           <MyNavbar />
           <div className='app container-fluid'>
@@ -49,6 +60,7 @@ function AppContent() {
         <Routes>
           <Route path='/signup' element={<PuiblicRoute><Signup /></PuiblicRoute>} />
           <Route path='/login' element={<PuiblicRoute><Login /></PuiblicRoute>} />
+          <Route path='/video/:roomId' element={<PrivateRoute><VideoRoom/></PrivateRoute>} />
         </Routes>
       )}
 

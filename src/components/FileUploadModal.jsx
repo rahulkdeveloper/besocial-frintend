@@ -3,12 +3,17 @@ import { Modal, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { handleFileUploadModal } from "../features/modal/modalSlice";
 import axiosInstance from "../api/axiosInstance";
+import EmojiPickr from "./EmojiPickr";
 
 const FileUploadModal = ({ selectedFile, previewUrl, sendMessage }) => {
   const [fileTxt, setFileTxt] = useState("");
   const dispatch = useDispatch();
   const [fileUploadStatus, setFileUploadStatus] = useState("idle");
   const { isFileModalShow } = useSelector((state) => state.modal);
+
+  const handleSelectedEmoji = (emojiData) => {
+    setFileTxt((prev) => prev + emojiData.emoji);
+  };
 
   const handleClose = () => {
     dispatch(
@@ -61,6 +66,7 @@ const FileUploadModal = ({ selectedFile, previewUrl, sendMessage }) => {
               value={fileTxt}
               placeholder="Type a message"
             />
+            <EmojiPickr handleSelectedEmoji={handleSelectedEmoji}/>
 
             <Button
               variant="success"
