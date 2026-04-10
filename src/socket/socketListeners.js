@@ -15,6 +15,8 @@ export const initSocketListeners = (userId) => {
 
   // ✅ New message
   socket.on("message_received", (data) => {
+    console.log("message_received socket recived===>",data);
+    
     if (
       data.receiverId.toString() === userId.toString()
     ) {
