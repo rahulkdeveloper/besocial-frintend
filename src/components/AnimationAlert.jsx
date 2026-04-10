@@ -20,7 +20,7 @@ const AnimationAlert = () => {
     },[dispatch,message,showAlert,duration])
 
     return (
-        <div className='' style={{position:"absolute",right:0,top:10,width:"20%"}}>
+        <div className='' style={{position:"absolute",right:0,top:10,width:"20%",zIndex:1}}>
             <AnimatePresence>
             {showAlert && (
                 <motion.div

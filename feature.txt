@@ -1,0 +1,4 @@
+1. created custom hook to handle file upload and preview in UI.
+2. filter chat from frontend for instant UI res and use debouncing to fetch filtered chatrooms data from API
+3. user can send friend request and user can accept and reject follow request.
+4. used mongodb aggreation to fetch data fast

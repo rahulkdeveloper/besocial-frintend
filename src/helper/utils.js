@@ -32,9 +32,41 @@ export const getCompleteTime = (date) => {
     return givenMoment.format("HH:mm, D MMMM YYYY");
 };
 
-export const textShorter = (text)=>{
-    if(text.length>25){
-        text = `${text.slice(0,25)}...`
+export const textShorter = (text) => {
+    if (text.length > 25) {
+        text = `${text.slice(0, 25)}...`
     }
     return text
+}
+
+export const formatDate = (date) => {
+    if (!date) return "";
+    return new Date(date).toISOString().split("T")[0];
+};
+
+export const filterChatrooms = (chatrooms, keyword) => {
+
+    if (!keyword || !keyword.trim()) {
+
+        return chatrooms;
+    } // 👈 handle empty
+    const search = keyword.toLowerCase().trim();
+
+    return chatrooms.filter(room => {
+        if (room.chatType === "single") {
+            const { fullname, bio, username } = room.friend || {};
+
+            return (
+                fullname?.toLowerCase().includes(search) ||
+                bio?.toLowerCase().includes(search) ||
+                username?.toLowerCase().includes(search)
+            );
+        }
+
+        if (room.chatType === "group") {
+            return room.name?.toLowerCase().includes(search);
+        }
+
+        return false;
+    });
 }

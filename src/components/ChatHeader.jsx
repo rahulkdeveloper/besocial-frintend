@@ -4,6 +4,7 @@ import { getCompleteTime } from '../helper/utils'
 import { getSocket } from '../socket/socket';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { constant } from "../config/config";
 
 const ChatHeader = ({ name, status, image, chatroomId }) => {
   const socket = getSocket();
@@ -40,7 +41,7 @@ const ChatHeader = ({ name, status, image, chatroomId }) => {
   return (
     <div className="d-flex justify-content-between align-items-center p-2 border-bottom bg-white">
       <div className="d-flex align-items-center">
-        <img src="https://res.cloudinary.com/dlfuxeq5r/image/upload/v1747120473/uploads/ijsl99u4nbdtmfwsof9a.png" className="rounded-circle me-2" alt="User" height={30} />
+        <img src={singleChatroomDetail?.friend?.profileImage?.url || constant.userIcon} className="rounded-circle me-2" alt="User" height={40} width={50} />
         <div className='d-flex flex-column'>
           <strong>{name}</strong>
           {userActiveDetail && <span className={`text-${userActiveDetail.status === 'online' ? 'success' : 'dark'}`} style={{ fontSize: "0.9rem" }}>{userActiveDetail.status === 'online' ? 'online' : getCompleteTime(singleChatroomDetail?.friend?.lastSeen)}</span>}

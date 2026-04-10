@@ -7,6 +7,9 @@ const initialState = {
     updateProfileError: null,
     userListStatus: 'idle',
     userListError: 'idle',
+    fetchProfileStatus:'idle',
+    fetchProfileError:null,
+    userProfile:null,
     pagination: {
         currentPage: 1,
         totalPages: 1,
@@ -40,6 +43,21 @@ export const userList = createAsyncThunk('user/list', async (payload, thunkAPI) 
 
     } catch (error) {
         console.log("error in login function", error);
+        throw new Error(error.response.data.message || error.response.data.errors || "userList failed")
+
+    }
+})
+
+export const fetchProfile = createAsyncThunk('user/profile', async (payload, thunkAPI) => {
+    try {
+
+        let url = `/user/profile`;
+
+        const res = await axiosInstance.get(url);
+        return res.data
+
+    } catch (error) {
+        console.log("error in fetchProfile function", error);
         throw new Error(error.response.data.message || error.response.data.errors || "userList failed")
 
     }
@@ -101,6 +119,19 @@ const userSlice = createSlice({
             .addCase(userList.rejected, (state, action) => {
                 state.userListStatus = 'failed';
                 state.userListError = action.error.message
+
+            })
+            .addCase(fetchProfile.pending, (state) => {
+                state.fetchProfileStatus = 'loading'
+            })
+            .addCase(fetchProfile.fulfilled, (state, action) => {
+                state.fetchProfileStatus = 'success';                
+                state.userProfile = action.payload.data
+
+            })
+            .addCase(fetchProfile.rejected, (state, action) => {
+                state.fetchProfileStatus = 'failed';
+                state.fetchProfileError = action.error.message
 
             })
     }

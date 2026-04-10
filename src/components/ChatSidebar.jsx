@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Image, Badge } from "react-bootstrap";
-import { getDateAndTime, textShorter } from "../helper/utils";
+import { filterChatrooms, getDateAndTime, textShorter } from "../helper/utils";
 import { constant } from "../config/config";
-import { FaImage } from "react-icons/fa";
-import { EditMessageSingleRoom, startChat } from "../features/chat/ChatSlice";
+import { FaCross, FaImage } from "react-icons/fa";
+import { EditMessageSingleRoom, fetchChatrooms, startChat } from "../features/chat/ChatSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { unReadIncomingMessage } from "../features/chat/ChatSlice";
 import { getSocket } from "../socket/socket";
+import {} from "react-icons/fa";
 
 const ChatSidebar = ({ allChatrooms }) => {
+  const [search, setSearch] = useState("");
   const socket = getSocket();
+  const [chatrooms, setChatrooms] = useState(allChatrooms);
 
   const dispatch = useDispatch();
 
@@ -69,15 +72,57 @@ const ChatSidebar = ({ allChatrooms }) => {
     };
   }, [socket, singleChatroomDetail?._id, user?._id]);
 
+ useEffect(() => {
+
+  if (allChatrooms) {
+    const filteredchats = filterChatrooms(allChatrooms, search);
+
+    setChatrooms(filteredchats);
+  }
+}, [search, allChatrooms]);
+
+useEffect(()=>{
+  const debounce = setTimeout(() => {
+    if(search.trim()){
+      dispatch(fetchChatrooms({search:search}))
+    }
+    else {
+      dispatch(fetchChatrooms({search:""}))
+    }
+  }, 400);
+  return ()=> clearTimeout(debounce)
+},[search])
+
   return (
     <div className="chat-sidebar bg-light border-end p-2">
       <h5 className="ps-2">Chats</h5>
-      <input
-        className="form-control my-2"
-        placeholder="Search or start new chat"
-      />
+      <div style={{ position: "relative" }}>
+        <input
+          type="text"
+          className="form-control my-2 pe-5"
+          placeholder="Search or start new chat"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {search && (
+          <span
+            onClick={() => setSearch("")}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              cursor: "pointer",
+              fontSize: "18px",
+            }}
+          >
+            ❌
+          </span>
+        )}
+      </div>
       <div className="chat-list">
-        {allChatrooms.map((room) => (
+        {chatrooms.map((room) => (
           <div
             key={room._id}
             className="chat-user d-flex justify-content-between align-items-center p-2 border-bottom"

@@ -20,6 +20,7 @@ import FileUploadModal from './components/FileUploadModal';
 import { useSelector } from 'react-redux';
 import { initSocketListeners } from './socket/socketListeners';
 import VideoRoom from './pages/VideoRoom';
+import Profile from './pages/Profile';
 
 function AppContent() {
   const user = useSelector(state=> state.auth.user);
@@ -52,6 +53,7 @@ function AppContent() {
               <Route path='/friends' element={<PrivateRoute><Friends/></PrivateRoute>} />
               <Route path='/friends' element={<PrivateRoute><Friends/></PrivateRoute>} />
               <Route path='/chats' element={<PrivateRoute><Chats/></PrivateRoute>} />
+              <Route path='/profile' element={<PrivateRoute><Profile/></PrivateRoute>} />
             </Routes>
 
           </div>

@@ -61,14 +61,14 @@ const Signup = () => {
     return (
         <div className='container m-2'>
             <div className='row'>
-                <div className='col'>
+                <div className='col d-flex justify-content-center align-items-center'>
                     <img
                         src='https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.svg'
                         height={"300"}
                         alt='login image'
                     />
                 </div>
-                <div className='col'>
+                <div className='col mt-3'>
                     {/* <div className='w-100' style={{ maxWidth: "450px" }}> */}
 
                     <h1 className='text-center'>Signup here</h1>

@@ -3,8 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { resetStatusAndErrors, login } from "../features/auth/AuthSlice"
 import { setShowAlert } from "../features/alert/AlertSlice"
-import ExampleModal from '../components/DeleteModal';
-import FileUploadModal from '../components/FileUploadModal';
 
 const Login = () => {
 
@@ -53,12 +51,13 @@ const Login = () => {
             {/* <FileUploadModal/> */}
 
             <div className='logo text-center'>
-                <img
+                {/* <img
                     src='https://admin.jolfest.com/assets/images/logo-main.png'
-                />
+                /> */}
+                <h1>ConnectBuddy</h1>
             </div>
 
-            <div className='border border-2 rounded p-5'>
+            <div className='border border-2 rounded p-5 mt-5'>
                 <h3 className='text-center'>Login Here</h3>
                 <form onSubmit={onSubmitHandler}>
                     <div className="mb-3">

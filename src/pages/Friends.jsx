@@ -54,8 +54,9 @@ const Friends = () => {
                                 {
                                     _id: friend._id,
                                     sender: {
-                                        _id: friend.friend?._id, fullName: friend.friend?.fullName, bio: friend.friend?.bio, profilImage: friend.friend?.profilImage?.url
-                                    }
+                                        _id: friend.friend?._id, fullName: friend.friend?.fullName, bio: friend.friend?.bio, profilImage: friend.friend?.profileImage?.url
+                                    },
+                                    chatroomId:friend.chatroomId
                                 }
                             }
                         // updateStatus={updateStatus}
