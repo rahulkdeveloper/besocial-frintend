@@ -5,10 +5,10 @@ let socket = null;
 export const initSocket = () => {
   if (!socket) {
     const token = localStorage.getItem("token");
-    console.log("Socket token:", token);
+    console.log("Socket token:", token,import.meta.env.VITE_API_URL);
     
 
-    socket = io("http://13.232.114.16:8001", {
+    socket = io(import.meta.env.VITE_API_URL, {
       auth: { token },
       transports: ["polling", "websocket"],
       autoConnect: true
