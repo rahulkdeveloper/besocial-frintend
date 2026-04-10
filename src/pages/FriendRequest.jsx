@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import ContactCard from '../components/contactCard';
+import ContactCard from '../components/ContactCard';
 import { friendRequestList, resetStatusAndErrors, updateFriendRequest } from '../features/user/ContactSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { setShowAlert } from "../features/alert/AlertSlice";

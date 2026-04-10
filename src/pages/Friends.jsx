@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import ContactCard from '../components/contactCard';
+import ContactCard from '../components/ContactCard';
 import { useDispatch, useSelector } from 'react-redux';
 import { myFriends, resetStatusAndErrors, updateFriendRequest } from '../features/user/ContactSlice';
 import { Form, Button, InputGroup, Container, FormControl } from 'react-bootstrap';
