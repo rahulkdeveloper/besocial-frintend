@@ -1,10 +1,11 @@
 import React, { use, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import DatePicker from "react-datepicker";
 import { Form, Container, Row, Col } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { signup, resetStatusAndErrors } from "../features/auth/AuthSlice";
 import { setShowAlert } from "../features/alert/AlertSlice";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -163,23 +164,24 @@ const Signup = () => {
             {/* <div className="mb-3">
                             <Form.Group controlId="birthday">
                                 <Form.Label className="">Date of Birth</Form.Label>
-                                <Form.Control type="date" name="dateOfBirth" className="shadow-sm"
-                                    value={dateOfBirth}
+                                <Form.Control type="date" name="dateOfBirth" className=""
+                                    value={dateOfBirth || ""}
                                     onChange={(e) => setDateOfBirth(e.target.value)}
                                 />
                             </Form.Group>
                         </div> */}
             <div className="mb-3">
-              <label for="exampleInputPassword1" className="form-label">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                className="form-control"
-                id="birthday"
-                name="dateOfBirth"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
+              <label className="form-label m-1">Date of Birth</label>
+              <DatePicker
+                selected={dateOfBirth}
+                onChange={(date) => setDateOfBirth(date)}
+                dateFormat="dd-MM-yyyy"
+                placeholderText="Select your date of birth"
+                className="form-control shadow-sm"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                maxDate={new Date()} // prevents future dates
               />
             </div>
 
